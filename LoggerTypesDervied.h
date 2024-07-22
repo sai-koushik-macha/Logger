@@ -37,7 +37,7 @@ struct LoggerTypeDerived2 : LoggerTypeBase<LoggerTypeDerived2> {
 };
 
 template <typename T>
-EnumDerivedTypes getType() {
+inline EnumDerivedTypes getType() noexcept {
 #define TYPECHECKERANDRETURNCORRECTENUM(DERIVED_TYPE)     \
     if constexpr (std::is_same<T, DERIVED_TYPE>::value) { \
         return EnumDerivedTypes::DERIVED_TYPE;            \
@@ -46,8 +46,9 @@ EnumDerivedTypes getType() {
     TYPECHECKERANDRETURNCORRECTENUM(LoggerTypeDerived2);
 };
 
-void DellocateFromMempool(Mempool& mempool, EnumDerivedTypes derived_type,
-                          void* pointer) {
+inline void DellocateFromMempool(Mempool& mempool,
+                                 EnumDerivedTypes derived_type,
+                                 void* pointer) noexcept {
 #define CASECHECKMEMPOOLDELLOCATE(DERIVED_TYPE)          \
     case EnumDerivedTypes::DERIVED_TYPE: {               \
         auto data = static_cast<DERIVED_TYPE*>(pointer); \
@@ -65,8 +66,8 @@ void DellocateFromMempool(Mempool& mempool, EnumDerivedTypes derived_type,
 }
 
 template <typename T>
-void PrintDerivedClass(T* logger_type, EnumDerivedTypes derived_type,
-                       void* pointer) {
+inline void PrintDerivedClass(T* logger_type, EnumDerivedTypes derived_type,
+                              void* pointer) noexcept {
 #define CASECHECKPRINT(DERIVED_TYPE)                     \
     case EnumDerivedTypes::DERIVED_TYPE: {               \
         auto data = static_cast<DERIVED_TYPE*>(pointer); \
