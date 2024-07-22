@@ -4,7 +4,11 @@
 #include "LoggerTypeBase.h"
 #include "Mempool.h"
 
-enum class EnumDerivedTypes { Default = 0, LoggerTypeDerived1 = 1 };
+enum class EnumDerivedTypes {
+    Default = 0,
+    LoggerTypeDerived1 = 1,
+    LoggerTypeDerived2 = 2
+};
 
 struct LoggerTypeDerived1 : LoggerTypeBase<LoggerTypeDerived1> {
     int number;
@@ -17,21 +21,43 @@ struct LoggerTypeDerived1 : LoggerTypeBase<LoggerTypeDerived1> {
     inline void log_impl(const int& _number) noexcept { number = _number; }
 };
 
+struct LoggerTypeDerived2 : LoggerTypeBase<LoggerTypeDerived2> {
+    int number;
+    char h;
+
+    template <typename LoggerType>
+    inline void print_impl(LoggerType* logger) noexcept {
+        std::cout << "Derived 2 " << number << h;
+    }
+
+    inline void log_impl(const int& _number, const char& _h) noexcept {
+        number = _number;
+        h = _h;
+    }
+};
+
 template <typename T>
 EnumDerivedTypes getType() {
-    if constexpr (std::is_same<T, LoggerTypeDerived1>::value) {
-        return EnumDerivedTypes::LoggerTypeDerived1;
+#define TYPECHECKERANDRETURNCORRECTENUM(DERIVED_TYPE)     \
+    if constexpr (std::is_same<T, DERIVED_TYPE>::value) { \
+        return EnumDerivedTypes::DERIVED_TYPE;            \
     }
+    TYPECHECKERANDRETURNCORRECTENUM(LoggerTypeDerived1);
+    TYPECHECKERANDRETURNCORRECTENUM(LoggerTypeDerived2);
 };
 
 void DellocateFromMempool(Mempool& mempool, EnumDerivedTypes derived_type,
                           void* pointer) {
+#define CASECHECKMEMPOOLDELLOCATE(DERIVED_TYPE)          \
+    case EnumDerivedTypes::DERIVED_TYPE: {               \
+        auto data = static_cast<DERIVED_TYPE*>(pointer); \
+        mempool.deallocate(data);                        \
+        break;                                           \
+    }
+
     switch (derived_type) {
-        case EnumDerivedTypes::LoggerTypeDerived1: {
-            auto data = static_cast<LoggerTypeDerived1*>(pointer);
-            mempool.deallocate(data);
-            break;
-        }
+        CASECHECKMEMPOOLDELLOCATE(LoggerTypeDerived1);
+        CASECHECKMEMPOOLDELLOCATE(LoggerTypeDerived2);
         case EnumDerivedTypes::Default: {
             break;
         }
@@ -41,12 +67,16 @@ void DellocateFromMempool(Mempool& mempool, EnumDerivedTypes derived_type,
 template <typename T>
 void PrintDerivedClass(T* logger_type, EnumDerivedTypes derived_type,
                        void* pointer) {
+#define CASECHECKPRINT(DERIVED_TYPE)                     \
+    case EnumDerivedTypes::DERIVED_TYPE: {               \
+        auto data = static_cast<DERIVED_TYPE*>(pointer); \
+        data->print(logger_type);                        \
+        break;                                           \
+    }
+
     switch (derived_type) {
-        case EnumDerivedTypes::LoggerTypeDerived1: {
-            auto data = static_cast<LoggerTypeDerived1*>(pointer);
-            data->print(logger_type);
-            break;
-        }
+        CASECHECKPRINT(LoggerTypeDerived1);
+        CASECHECKPRINT(LoggerTypeDerived2);
         case EnumDerivedTypes::Default: {
             break;
         }

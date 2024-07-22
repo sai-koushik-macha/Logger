@@ -14,6 +14,7 @@ int main() {
     std::signal(SIGINT, signal_handler);
     logger.log<LoggerTypeDerived1>(true, true, LOGLOCATION, 1024);
     logger.log<LoggerTypeDerived1>(true, false, LOGLOCATION, 10);
+    logger.log<LoggerTypeDerived2>(true, false, LOGLOCATION, 10, 'h');
     while (run_application) {
     }
     return 0;
