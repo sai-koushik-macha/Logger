@@ -2,7 +2,6 @@
 #define LOGGERTYPEBASE_H_
 
 #include <ctime>
-#include <iomanip>
 #include <iostream>
 #include <source_location>
 #include <string>
@@ -22,19 +21,62 @@ struct LoggerTypeBase {
     }
 
     inline std::string getTime() noexcept {
-        std::stringstream ss;
-        auto timeinfo = localtime(&timestamp.tv_sec);
-        ss << std::put_time(timeinfo, "%Y-%m-%d %H:%M:%S");
-        ss << "." << std::setfill('0') << std::setw(9) << timestamp.tv_nsec;
-        return ss.str();
+        tm* time_info = localtime(&timestamp.tv_sec);
+
+        // Use strftime for basic time formatting
+        char buffer[80];
+        size_t formatted_length =
+            strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", time_info);
+
+        // Check for formatting errors (optional)
+        if (formatted_length == 0) {
+            return "Error formatting time";
+        }
+
+        // Create the final formatted string with space for nanoseconds
+        std::string formatted_time(buffer, formatted_length);
+        formatted_time += ".";
+
+        // Convert nanoseconds to a string with leading zeros
+        std::string nanoseconds = std::to_string(timestamp.tv_nsec);
+        nanoseconds.insert(0, 9 - nanoseconds.length(), '0');
+
+        // Append nanoseconds to the formatted time
+        formatted_time += nanoseconds;
+
+        return "[" + formatted_time + "]";
     }
 
     inline std::string getLocation() noexcept {
-        std::stringstream ss;
-        ss << "[" << logging_location.file_name() << ","
-           << logging_location.function_name() << "," << logging_location.line()
-           << "]";
-        return ss.str();
+        // std::stringstream ss;
+        // ss << "[" << logging_location.file_name() << ","
+        //    << logging_location.function_name() << "," <<
+        //    logging_location.line()
+        //    << "]";
+        // std::string formatted_source =
+        //     std::string("[") + std::string(logging_location.file_name()) +
+        //     std::string(", ") + std::string(logging_location.function_name())
+        //     + std::string(", ") + std::string(logging_location.line()) +
+        //     std::string("]");
+
+        auto line_in_string = std::to_string(logging_location.line());
+
+        const char* multiple_messages[] = {
+            "[",  logging_location.file_name(),
+            ", ", logging_location.function_name(),
+            ", ", line_in_string.c_str(),
+            "]"};
+
+        int total_messages =
+            sizeof(multiple_messages) / sizeof(multiple_messages[0]);
+
+        std::string formatted_source;
+
+        for (int i = 0; i < total_messages; i++) {
+            formatted_source += multiple_messages[i];
+        }
+
+        return formatted_source;
     };
 
     template <typename LoggerType>
