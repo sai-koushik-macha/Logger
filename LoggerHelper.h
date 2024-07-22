@@ -113,7 +113,7 @@ class Logger {
 
     volatile bool run;
     std::deque<DataForLog> log_queue;
-    SpinLock<true> sp;
+    SpinLock sp;
     Mempool mempool;
     const bool use_thread;
     const int core_id;

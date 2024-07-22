@@ -5,30 +5,12 @@
 
 #include <cstdio>
 #include <deque>
-#include <mutex>
 #include <typeindex>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
-template <bool use_lock>
-struct SpinLock;
-
-template <>
-struct SpinLock<false> {
-    SpinLock() noexcept {};
-    SpinLock(const SpinLock&) = delete;
-    SpinLock(SpinLock&&) = delete;
-    SpinLock& operator=(const SpinLock&) = delete;
-    SpinLock& operator=(SpinLock&&) = delete;
-    ~SpinLock() noexcept {};
-
-    inline void lock() noexcept {}
-    inline void unlock() noexcept {}
-};
-
-template <>
-struct SpinLock<true> {
+struct SpinLock {
     pthread_spinlock_t sp;
     SpinLock() noexcept { pthread_spin_init(&sp, PTHREAD_PROCESS_PRIVATE); }
     SpinLock(const SpinLock&) = delete;
