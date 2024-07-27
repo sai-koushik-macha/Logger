@@ -40,6 +40,10 @@ class Logger {
             run = false;
             pthread_join(thread, nullptr);
         }
+        DataForLog data;
+        while (DataAssignAndDellocateHelper(data)) {
+            PrintDerivedClass(this, data.derived_type, data.pointer);
+        }
     }
 
     void LogHelper(char const* format, ...) {
@@ -95,7 +99,7 @@ class Logger {
         static_assert(
             LoggerTypeBase<T>::template isDerviedOfLoggerTypeBase<T>(),
             "It is not derived class of LoggerTypeBase");
-        pointer->log(_log_time, _log_location, _logging_location);
+        pointer->logObjBase(_log_time, _log_location, _logging_location);
 
         if (use_thread) {
             sp.lock();
@@ -127,18 +131,22 @@ class Logger {
         }
     }
 
-    void print() noexcept {
-        DataForLog data;
-        bool has_data = false;
-        if (use_thread) {
-            sp.lock();
-        }
+    inline bool DataAssignAndDellocateHelper(DataForLog& data) noexcept {
         if (log_queue.size()) {
             data = log_queue.front();
             log_queue.pop_front();
-            has_data = true;
             DellocateFromMempool(mempool, data.derived_type, data.pointer);
+            return true;
         }
+        return false;
+    }
+
+    inline void print() noexcept {
+        DataForLog data;
+        if (use_thread) {
+            sp.lock();
+        }
+        auto has_data = DataAssignAndDellocateHelper(data);
         if (use_thread) {
             sp.unlock();
         }
