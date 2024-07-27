@@ -59,7 +59,7 @@ class Logger {
         if (use_thread) {
             sp.lock();
         }
-        T* data = mempool.allocate<T>();
+        auto data = mempool.allocate<T>();
         data->log(_log_time, _log_location, _logging_location,
                   std::forward<Args>(args)...);
         log_queue.emplace_back(getType<T>(), data);
@@ -69,6 +69,44 @@ class Logger {
 
         if (!use_thread) {
             std::cout << "Hi not using thread" << std::endl;
+            print();
+        }
+    }
+
+    template <typename T>
+    auto getPrintHelperObj() {
+        static_assert(
+            LoggerTypeBase<T>::template isDerviedOfLoggerTypeBase<T>(),
+            "It is not derived class of LoggerTypeBase");
+        T* obj = nullptr;
+        if (use_thread) {
+            sp.lock();
+            obj = mempool.allocate<T>();
+            sp.unlock();
+        } else {
+            obj = mempool.allocate<T>();
+        }
+        return obj;
+    }
+
+    template <typename T>
+    void logObj(const bool _log_time, const bool _log_location,
+                const std::source_location& _logging_location,
+                T* pointer) noexcept {
+        static_assert(
+            LoggerTypeBase<T>::template isDerviedOfLoggerTypeBase<T>(),
+            "It is not derived class of LoggerTypeBase");
+        pointer->log(_log_time, _log_location, _logging_location);
+
+        if (use_thread) {
+            sp.lock();
+        }
+        log_queue.emplace_back(getType<T>(), pointer);
+        if (use_thread) {
+            sp.unlock();
+        }
+        if (!use_thread) {
+            std::cout << "Log Obj not using thread" << std::endl;
             print();
         }
     }

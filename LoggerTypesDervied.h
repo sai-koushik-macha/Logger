@@ -38,12 +38,18 @@ struct LoggerTypeDerived2 : LoggerTypeBase<LoggerTypeDerived2> {
 
 template <typename T>
 inline EnumDerivedTypes getType() noexcept {
-#define TYPECHECKERANDRETURNCORRECTENUM(DERIVED_TYPE)     \
-    if constexpr (std::is_same<T, DERIVED_TYPE>::value) { \
-        return EnumDerivedTypes::DERIVED_TYPE;            \
+#define TYPECHECKERANDRETURNCORRECTENUM(DERIVED_TYPE)          \
+    else if constexpr (std::is_same<T, DERIVED_TYPE>::value) { \
+        return EnumDerivedTypes::DERIVED_TYPE;                 \
     }
-    TYPECHECKERANDRETURNCORRECTENUM(LoggerTypeDerived1);
-    TYPECHECKERANDRETURNCORRECTENUM(LoggerTypeDerived2);
+    if constexpr (false) {
+        return EnumDerivedTypes::Default;
+    }
+    TYPECHECKERANDRETURNCORRECTENUM(LoggerTypeDerived1)
+    TYPECHECKERANDRETURNCORRECTENUM(LoggerTypeDerived2)
+    else {
+        static_assert(false, "Please Provide correct type");
+    }
 };
 
 inline void DellocateFromMempool(Mempool& mempool,

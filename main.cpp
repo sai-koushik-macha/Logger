@@ -15,6 +15,10 @@ int main() {
     logger.log<LoggerTypeDerived1>(true, true, LOGLOCATION, 1024);
     logger.log<LoggerTypeDerived1>(true, false, LOGLOCATION, 10);
     logger.log<LoggerTypeDerived2>(true, false, LOGLOCATION, 10, 'h');
+    auto log2_helper = logger.getPrintHelperObj<LoggerTypeDerived2>();
+    log2_helper->h = 'h';
+    logger.logObj(true, true, LOGLOCATION, log2_helper);
+
     while (run_application) {
     }
     return 0;

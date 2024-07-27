@@ -91,6 +91,8 @@ struct LoggerTypeBase {
         std::cout << "\n";
     }
 
+    // void log() {}
+
     template <typename... Args>
     void log(const bool _log_time, const bool _log_location,
              const std::source_location& _logging_location,
@@ -104,6 +106,18 @@ struct LoggerTypeBase {
             logging_location = _logging_location;
         }
         static_cast<Derived*>(this)->log_impl(std::forward<Args>(args)...);
+    }
+
+    void log(const bool _log_time, const bool _log_location,
+             const std::source_location& _logging_location) {
+        log_time = _log_time;
+        log_location = _log_location;
+        if (log_time) {
+            clock_gettime(CLOCK_REALTIME, &timestamp);
+        }
+        if (log_location) {
+            logging_location = _logging_location;
+        }
     }
 
    private:
