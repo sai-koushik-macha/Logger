@@ -62,10 +62,10 @@ struct LoggerTypeBase {
         auto line_in_string = std::to_string(logging_location.line());
 
         const char* multiple_messages[] = {
-            "[",  logging_location.file_name(),
+            "(",  logging_location.file_name(),
             ", ", logging_location.function_name(),
             ", ", line_in_string.c_str(),
-            "]"};
+            ")"};
 
         int total_messages =
             sizeof(multiple_messages) / sizeof(multiple_messages[0]);
