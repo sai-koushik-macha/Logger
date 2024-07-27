@@ -68,7 +68,6 @@ class Logger {
         }
 
         if (!use_thread) {
-            std::cout << "Hi not using thread" << std::endl;
             print();
         }
     }
@@ -106,7 +105,6 @@ class Logger {
             sp.unlock();
         }
         if (!use_thread) {
-            std::cout << "Log Obj not using thread" << std::endl;
             print();
         }
     }
