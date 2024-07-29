@@ -45,7 +45,7 @@ class Mempool {
     }
 
     template <typename T>
-    inline void Register() {
+    inline void Register() noexcept {
         ExtendMemory<T>();
     }
 
@@ -54,7 +54,7 @@ class Mempool {
     std::vector<char*> memory_blocks;
 
     template <typename T>
-    void ExtendMemory() {
+    inline void ExtendMemory() noexcept {
         auto iter = mempools_mapper.find(typeid(T));
         static constexpr auto type_size = sizeof(T);
         static constexpr std::size_t chunk_size_ = 1024;
