@@ -21,21 +21,11 @@ class Mempool {
     inline T* allocate(Args... args) {
         auto iter = mempools_mapper.find(typeid(T));
         if (iter == mempools_mapper.end()) {
-            // log();
             mempools_mapper[typeid(T)] = {};
         }
         iter = mempools_mapper.find(typeid(T));
         if (mempools_mapper[typeid(T)].empty()) {
-            // log();
-            static constexpr auto type_size = sizeof(T);
-            static constexpr std::size_t chunk_size_ = 1024;
-            static constexpr auto size_to_create = type_size * chunk_size_;
-            auto memory_block = new char[size_to_create];
-            for (int i = 0; i < chunk_size_; i++) {
-                iter->second.push_back(
-                    static_cast<void*>(memory_block + i * type_size));
-            }
-            memory_blocks.push_back(memory_block);
+            ExtendMemory<T>();
         }
 
         auto data = iter->second.back();
@@ -56,13 +46,26 @@ class Mempool {
 
     template <typename T>
     inline void Register() {
-        auto data = allocate<T>();
-        deallocate(data);
+        ExtendMemory<T>();
     }
 
    private:
     std::unordered_map<std::type_index, std::deque<void*>> mempools_mapper;
     std::vector<char*> memory_blocks;
+
+    template <typename T>
+    void ExtendMemory() {
+        auto iter = mempools_mapper.find(typeid(T));
+        static constexpr auto type_size = sizeof(T);
+        static constexpr std::size_t chunk_size_ = 1024;
+        static constexpr auto size_to_create = type_size * chunk_size_;
+        auto memory_block = new char[size_to_create];
+        for (int i = 0; i < chunk_size_; i++) {
+            iter->second.push_back(
+                static_cast<void*>(memory_block + i * type_size));
+        }
+        memory_blocks.push_back(memory_block);
+    }
 };
 
 #endif /* MEMPOOL_H_ */
