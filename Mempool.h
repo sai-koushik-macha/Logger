@@ -33,7 +33,7 @@ class Mempool {
     }
 
     template <typename T, typename... Args>
-    T* allocate(Args... args) noexcept {
+    inline T* allocate(Args... args) noexcept {
         auto iter = mempools_mapper.find(typeid(T));
         if (iter == mempools_mapper.end()) {
             // log();
@@ -60,7 +60,7 @@ class Mempool {
     }
 
     template <typename T>
-    void deallocate(T* obj) noexcept {
+    inline void deallocate(T* obj) noexcept {
         // log();
         obj->~T();
         auto iter = mempools_mapper.find(typeid(T));
@@ -70,7 +70,7 @@ class Mempool {
     }
 
     template <typename T>
-    void Register() {
+    inline void Register() noexcept {
         auto data = allocate<T>();
         deallocate(data);
     }
