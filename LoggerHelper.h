@@ -14,6 +14,7 @@
 #include "LoggerTypeBase.h"
 #include "LoggerTypesDervied.h"
 #include "Mempool.h"
+#include "SpinLock.h"
 
 #define LOGLOCATION std::source_location::current()
 

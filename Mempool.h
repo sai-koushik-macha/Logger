@@ -1,27 +1,12 @@
 #ifndef MEMPOOL_H_
 #define MEMPOOL_H_
 
-#include <pthread.h>
-
 #include <cstdio>
 #include <deque>
 #include <typeindex>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-struct SpinLock {
-    pthread_spinlock_t sp;
-    SpinLock() noexcept { pthread_spin_init(&sp, PTHREAD_PROCESS_PRIVATE); }
-    SpinLock(const SpinLock&) = delete;
-    SpinLock(SpinLock&&) = delete;
-    SpinLock& operator=(const SpinLock&) = delete;
-    SpinLock& operator=(SpinLock&&) = delete;
-    ~SpinLock() noexcept { pthread_spin_destroy(&sp); }
-
-    inline void lock() noexcept { pthread_spin_lock(&sp); }
-    inline void unlock() noexcept { pthread_spin_unlock(&sp); }
-};
 
 class Mempool {
    public:
