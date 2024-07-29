@@ -8,6 +8,15 @@
 #include <utility>
 #include <vector>
 
+// #define DEBUG_MEM
+
+#ifdef DEBUG_MEM
+#define LOG_LOCATION_MEMPOOL \
+    printf("%s, %s, %d\n", __FILE__, __FUNCTION__, __LINE__);
+#else
+#define LOG_LOCATION_MEMPOOL
+#endif
+
 class Mempool {
    public:
     ~Mempool() {
@@ -21,10 +30,12 @@ class Mempool {
     inline T* allocate(Args... args) {
         auto iter = mempools_mapper.find(typeid(T));
         if (iter == mempools_mapper.end()) {
+            LOG_LOCATION_MEMPOOL;
             mempools_mapper[typeid(T)] = {};
         }
         iter = mempools_mapper.find(typeid(T));
         if (mempools_mapper[typeid(T)].empty()) {
+            LOG_LOCATION_MEMPOOL;
             ExtendMemory<T>();
         }
 
@@ -37,6 +48,7 @@ class Mempool {
     template <typename T>
     inline void deallocate(T* obj) {
         // log();
+        LOG_LOCATION_MEMPOOL;
         obj->~T();
         auto iter = mempools_mapper.find(typeid(T));
         if (iter != mempools_mapper.end()) {
@@ -46,7 +58,11 @@ class Mempool {
 
     template <typename T>
     inline void Register() noexcept {
-        ExtendMemory<T>();
+        if (auto iter = mempools_mapper.find(typeid(T));
+            iter == mempools_mapper.end()) {
+            mempools_mapper[typeid(T)] = {};
+            ExtendMemory<T>();
+        }
     }
 
    private:
@@ -55,6 +71,7 @@ class Mempool {
 
     template <typename T>
     inline void ExtendMemory() noexcept {
+        LOG_LOCATION_MEMPOOL;
         auto iter = mempools_mapper.find(typeid(T));
         static constexpr auto type_size = sizeof(T);
         static constexpr std::size_t chunk_size_ = 1024;
