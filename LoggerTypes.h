@@ -1,36 +1,33 @@
 #ifndef LOGGERTYPESDERIVED_H_
 #define LOGGERTYPESDERIVED_H_
 
-#include "LoggerTypeBase.h"
+#include <iostream>
+
 #include "Mempool.h"
 
-enum class EnumDerivedTypes {
-    Default = 0,
-    LoggerTypeDerived1 = 1,
-    LoggerTypeDerived2 = 2
-};
+enum class EnumDerivedTypes { Default = 0, LoggerType1 = 1, LoggerType2 = 2 };
 
-struct LoggerTypeDerived1 : LoggerTypeBase<LoggerTypeDerived1> {
+struct LoggerType1 {
     int number;
 
     template <typename LoggerType>
-    inline void print_impl(LoggerType* logger) noexcept {
-        std::cout << "Derived 1 " << number;
+    inline void print(LoggerType* logger) noexcept {
+        std::cout << "Derived 1 " << number << '\n';
     }
 
-    inline void log_impl(const int& _number) noexcept { number = _number; }
+    inline void log(const int& _number) noexcept { number = _number; }
 };
 
-struct LoggerTypeDerived2 : LoggerTypeBase<LoggerTypeDerived2> {
+struct LoggerType2 {
     int number;
     char h;
 
     template <typename LoggerType>
-    inline void print_impl(LoggerType* logger) noexcept {
-        std::cout << "Derived 2 " << number << h;
+    inline void print(LoggerType* logger) noexcept {
+        std::cout << "Derived 2 " << number << h << '\n';
     }
 
-    inline void log_impl(const int& _number, const char& _h) noexcept {
+    inline void log(const int& _number, const char& _h) noexcept {
         number = _number;
         h = _h;
     }
@@ -45,8 +42,8 @@ inline EnumDerivedTypes getType() noexcept {
     if constexpr (false) {
         return EnumDerivedTypes::Default;
     }
-    TYPECHECKERANDRETURNCORRECTENUM(LoggerTypeDerived1)
-    TYPECHECKERANDRETURNCORRECTENUM(LoggerTypeDerived2)
+    TYPECHECKERANDRETURNCORRECTENUM(LoggerType1)
+    TYPECHECKERANDRETURNCORRECTENUM(LoggerType2)
     else {
         static_assert(false, "Please Provide correct type");
     }
@@ -63,8 +60,8 @@ inline void DellocateFromMempool(Mempool& mempool,
     }
 
     switch (derived_type) {
-        CASECHECKMEMPOOLDELLOCATE(LoggerTypeDerived1);
-        CASECHECKMEMPOOLDELLOCATE(LoggerTypeDerived2);
+        CASECHECKMEMPOOLDELLOCATE(LoggerType1);
+        CASECHECKMEMPOOLDELLOCATE(LoggerType2);
         case EnumDerivedTypes::Default: {
             break;
         }
@@ -82,8 +79,8 @@ inline void PrintDerivedClass(T* logger_type, EnumDerivedTypes derived_type,
     }
 
     switch (derived_type) {
-        CASECHECKPRINT(LoggerTypeDerived1);
-        CASECHECKPRINT(LoggerTypeDerived2);
+        CASECHECKPRINT(LoggerType1);
+        CASECHECKPRINT(LoggerType2);
         case EnumDerivedTypes::Default: {
             break;
         }

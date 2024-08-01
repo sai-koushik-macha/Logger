@@ -1,14 +1,14 @@
 #ifndef LOGGER_H_
 #define LOGGER_H_
 
+#include <fmt/chrono.h>
 #include <pthread.h>
 #include <sched.h>
 
 #include <deque>
 #include <source_location>
 
-#include "LoggerTypeBase.h"
-#include "LoggerTypesDervied.h"
+#include "LoggerTypes.h"
 #include "Mempool.h"
 #include "SpinLock.h"
 
@@ -47,30 +47,21 @@ class Logger {
     void log(const bool _log_time, const bool _log_location,
              const std::source_location& _logging_location,
              Args&&... args) noexcept {
-        static_assert(
-            LoggerTypeBase<T>::template isDerviedOfLoggerTypeBase<T>(),
-            "It is not derived class of LoggerTypeBase");
-
         if (use_thread) {
             sp.lock();
             auto data = mempool.allocate<T>();
-            data->log(_log_time, _log_location, _logging_location,
-                      std::forward<Args>(args)...);
+            data->log(std::forward<Args>(args)...);
             log_queue.emplace_back(getType<T>(), data);
             sp.unlock();
         } else {
             T data;
-            data.log(_log_time, _log_location, _logging_location,
-                     std::forward<Args>(args)...);
+            data.log(std::forward<Args>(args)...);
             PrintHelper(getType<T>(), &data);
         }
     }
 
     template <typename T>
     auto getPrintHelperObj() {
-        static_assert(
-            LoggerTypeBase<T>::template isDerviedOfLoggerTypeBase<T>(),
-            "It is not derived class of LoggerTypeBase");
         T* obj = nullptr;
         if (use_thread) {
             sp.lock();
@@ -86,11 +77,6 @@ class Logger {
     void logObj(const bool _log_time, const bool _log_location,
                 const std::source_location& _logging_location,
                 T* pointer) noexcept {
-        static_assert(
-            LoggerTypeBase<T>::template isDerviedOfLoggerTypeBase<T>(),
-            "It is not derived class of LoggerTypeBase");
-        pointer->logObjBase(_log_time, _log_location, _logging_location);
-
         if (use_thread) {
             sp.lock();
             log_queue.emplace_back(getType<T>(), pointer);
