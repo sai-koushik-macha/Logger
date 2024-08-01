@@ -5,7 +5,7 @@
 
 #include "Mempool.h"
 
-enum class EnumDerivedTypes { Default = 0, LoggerType1 = 1, LoggerType2 = 2 };
+enum class EnumLoggerTypes { Default = 0, LoggerType1 = 1, LoggerType2 = 2 };
 
 struct LoggerType1 {
     int number;
@@ -33,13 +33,13 @@ struct LoggerType2 {
 };
 
 template <typename T>
-inline EnumDerivedTypes getType() noexcept {
-#define TYPECHECKERANDRETURNCORRECTENUM(DERIVED_TYPE)          \
-    else if constexpr (std::is_same<T, DERIVED_TYPE>::value) { \
-        return EnumDerivedTypes::DERIVED_TYPE;                 \
+inline EnumLoggerTypes getType() noexcept {
+#define TYPECHECKERANDRETURNCORRECTENUM(TYPE)          \
+    else if constexpr (std::is_same<T, TYPE>::value) { \
+        return EnumLoggerTypes::TYPE;                  \
     }
     if constexpr (false) {
-        return EnumDerivedTypes::Default;
+        return EnumLoggerTypes::Default;
     }
     TYPECHECKERANDRETURNCORRECTENUM(LoggerType1)
     TYPECHECKERANDRETURNCORRECTENUM(LoggerType2)
@@ -48,38 +48,37 @@ inline EnumDerivedTypes getType() noexcept {
     }
 };
 
-inline void DellocateFromMempool(Mempool& mempool,
-                                 EnumDerivedTypes derived_type,
+inline void DellocateFromMempool(Mempool& mempool, EnumLoggerTypes derived_type,
                                  void* pointer) noexcept {
-#define CASECHECKMEMPOOLDELLOCATE(DERIVED_TYPE)          \
-    case EnumDerivedTypes::DERIVED_TYPE: {               \
-        auto data = static_cast<DERIVED_TYPE*>(pointer); \
-        mempool.deallocate(data);                        \
-        break;                                           \
+#define CASECHECKMEMPOOLDELLOCATE(TYPE)          \
+    case EnumLoggerTypes::TYPE: {                \
+        auto data = static_cast<TYPE*>(pointer); \
+        mempool.deallocate(data);                \
+        break;                                   \
     }
 
     switch (derived_type) {
         CASECHECKMEMPOOLDELLOCATE(LoggerType1);
         CASECHECKMEMPOOLDELLOCATE(LoggerType2);
-        case EnumDerivedTypes::Default: {
+        case EnumLoggerTypes::Default: {
             break;
         }
     }
 }
 
-inline std::string_view PrintDerivedClass(EnumDerivedTypes derived_type,
-                                          void* pointer) noexcept {
-#define CASECHECKPRINT(DERIVED_TYPE)                     \
-    case EnumDerivedTypes::DERIVED_TYPE: {               \
-        auto data = static_cast<DERIVED_TYPE*>(pointer); \
-        return data->print();                            \
-        break;                                           \
+inline std::string_view PrintType(EnumLoggerTypes derived_type,
+                                  void* pointer) noexcept {
+#define CASECHECKPRINT(TYPE)                     \
+    case EnumLoggerTypes::TYPE: {                \
+        auto data = static_cast<TYPE*>(pointer); \
+        return data->print();                    \
+        break;                                   \
     }
 
     switch (derived_type) {
         CASECHECKPRINT(LoggerType1);
         CASECHECKPRINT(LoggerType2);
-        case EnumDerivedTypes::Default: {
+        case EnumLoggerTypes::Default: {
             break;
         }
     }

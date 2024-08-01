@@ -12,22 +12,20 @@
 #include "Mempool.h"
 #include "SpinLock.h"
 
-#define LOGLOCATION std::source_location::current()
-
 template <typename T>
 struct DataForLog {
     bool log_time;
     bool log_location;
     std::source_location location;
     T* logger_pointer;
-    EnumDerivedTypes derived_type;
+    EnumLoggerTypes logger_type;
     void* pointer;
     std::chrono::system_clock::time_point time_now;
 
-    DataForLog(T* logger_pointer, EnumDerivedTypes _derived_type,
-               void* _pointer, bool _log_time, bool _log_location,
+    DataForLog(T* logger_pointer, EnumLoggerTypes _logger_type, void* _pointer,
+               bool _log_time, bool _log_location,
                const std::source_location& location_)
-        : derived_type(_derived_type),
+        : logger_type(_logger_type),
           pointer(_pointer),
           logger_pointer(logger_pointer),
           log_time(_log_time),
@@ -50,6 +48,7 @@ class Logger {
     static void StartThreadProcessing(int _core_id) {
         run = true;
 
+        use_thread = true;
         core_id = _core_id;
         pthread_create(&thread, nullptr, Logger::Process, nullptr);
     }
@@ -78,8 +77,6 @@ class Logger {
                     const std::source_location& location =
                         std::source_location::current()) {
         if (use_thread) {
-            // auto pointer = mempool.allocate<DataForLog<Logger>>(getType<T>(),
-            // data, logger);
             sp.lock();
             auto pointer = mempool.allocate<DataForLog<Logger>>(
                 logger, getType<T>(), data, log_time_, log_location_, location);
@@ -105,8 +102,7 @@ class Logger {
                              data_log->location.line());
         }
         std::cout << s;
-        std::cout << PrintDerivedClass(data_log->derived_type,
-                                       data_log->pointer)
+        std::cout << PrintType(data_log->logger_type, data_log->pointer)
                   << "\n";
     }
     static void* Process(void*) {
@@ -116,8 +112,10 @@ class Logger {
             if (log_queue.size()) {
                 data_log = log_queue.front();
                 log_queue.pop_front();
+                sp.unlock();
                 data_log->logger_pointer->LogHelper(data_log);
-                DellocateFromMempool(mempool, data_log->derived_type,
+                sp.lock();
+                DellocateFromMempool(mempool, data_log->logger_type,
                                      data_log->pointer);
                 mempool.deallocate(data_log);
             }
