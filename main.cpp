@@ -10,7 +10,7 @@ inline void signal_handler(int signal) noexcept {
 }
 
 int main() {
-    // Logger::StartThreadProcessing(-1);
+    Logger::StartThreadProcessing(-1);
     Logger logger("Hi.txt");
     std::signal(SIGINT, signal_handler);
     // logger.log<LoggerType1>(true, true, LOGLOCATION, 1024);

@@ -63,8 +63,14 @@ class Logger {
 
     template <typename T>
     static T* getObj() {
-        std::lock_guard<SpinLock> lock_g(Logger::sp);
-        return mempool.allocate<T>();
+        if (use_thread) {
+            Logger::sp.lock();
+        }
+        auto pointer = mempool.allocate<T>();
+        if (use_thread) {
+            Logger::sp.unlock();
+        }
+        return pointer;
     }
 
     template <typename T>
@@ -74,10 +80,16 @@ class Logger {
         if (use_thread) {
             // auto pointer = mempool.allocate<DataForLog<Logger>>(getType<T>(),
             // data, logger);
+            sp.lock();
+            auto pointer = mempool.allocate<DataForLog<Logger>>(
+                logger, getType<T>(), data, log_time_, log_location_, location);
+            log_queue.push_back(pointer);
+            sp.unlock();
         } else {
             DataForLog<Logger> data_log(logger, getType<T>(), data, log_time_,
                                         log_location_, location);
             logger->LogHelper(&data_log);
+            mempool.deallocate(data);
         }
     }
 
@@ -98,7 +110,19 @@ class Logger {
                   << "\n";
     }
     static void* Process(void*) {
+        DataForLog<Logger>* data_log = nullptr;
         while (run) {
+            sp.lock();
+            if (log_queue.size()) {
+                data_log = log_queue.front();
+                log_queue.pop_front();
+                data_log->logger_pointer->LogHelper(data_log);
+                DellocateFromMempool(mempool, data_log->derived_type,
+                                     data_log->pointer);
+                mempool.deallocate(data_log);
+            }
+            sp.unlock();
+            data_log = nullptr;
         }
         return nullptr;
     }
