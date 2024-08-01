@@ -1,21 +1,25 @@
 #ifndef LOGGER_H_
 #define LOGGER_H_
 
-#include <fmt/chrono.h>
 #include <pthread.h>
 #include <sched.h>
 
+#include <chrono>
 #include <deque>
+#include <format>
 #include <source_location>
 
 #include "LoggerTypes.h"
 #include "Mempool.h"
 #include "SpinLock.h"
 
+#define MAX_FILE_SIZE 3068
+
 template <typename T>
 struct DataForLog {
     bool log_time;
     bool log_location;
+    bool new_line;
     std::source_location location;
     T* logger_pointer;
     EnumLoggerTypes logger_type;
@@ -23,13 +27,14 @@ struct DataForLog {
     std::chrono::system_clock::time_point time_now;
 
     DataForLog(T* logger_pointer, EnumLoggerTypes _logger_type, void* _pointer,
-               bool _log_time, bool _log_location,
+               bool _log_time, bool _log_location, bool _new_line,
                const std::source_location& location_)
         : logger_type(_logger_type),
           pointer(_pointer),
           logger_pointer(logger_pointer),
           log_time(_log_time),
-          log_location(_log_location) {
+          log_location(_log_location),
+          new_line(_new_line) {
         if (log_location) {
             location = location_;
         }
@@ -41,7 +46,8 @@ struct DataForLog {
 
 class Logger {
    public:
-    Logger(char* filename_) {}
+    Logger(std::string_view filename_)
+        : count(0), filename(filename_), size_of_the_new_file(0) {}
 
     ~Logger() {}
 
@@ -73,18 +79,20 @@ class Logger {
     }
 
     template <typename T>
-    static void Log(Logger* logger, bool log_time_, bool log_location_, T* data,
+    static void Log(Logger* logger, bool log_time_, bool log_location_,
+                    bool new_line_, T* data,
                     const std::source_location& location =
                         std::source_location::current()) {
         if (use_thread) {
             sp.lock();
             auto pointer = mempool.allocate<DataForLog<Logger>>(
-                logger, getType<T>(), data, log_time_, log_location_, location);
+                logger, getType<T>(), data, log_time_, log_location_, new_line_,
+                location);
             log_queue.push_back(pointer);
             sp.unlock();
         } else {
             DataForLog<Logger> data_log(logger, getType<T>(), data, log_time_,
-                                        log_location_, location);
+                                        log_location_, new_line_, location);
             logger->LogHelper(&data_log);
             mempool.deallocate(data);
         }
@@ -94,16 +102,28 @@ class Logger {
     void LogHelper(DataForLog<Logger>* data_log) {
         std::string s;
         if (data_log->log_time) {
-            s += fmt::format("[{}] ", data_log->time_now);
+            s += std::format("[{}] ", data_log->time_now);
         }
         if (data_log->log_location) {
-            s += fmt::format("[{} {} {}] ", data_log->location.file_name(),
+            s += std::format("[{} {} {}] ", data_log->location.file_name(),
                              data_log->location.function_name(),
                              data_log->location.line());
         }
-        std::cout << s;
-        std::cout << PrintType(data_log->logger_type, data_log->pointer)
-                  << "\n";
+        s += PrintType(data_log->logger_type, data_log->pointer);
+        if (data_log->new_line) {
+            s += '\n';
+        }
+        int sizeofstring = s.length();
+        std::cout << sizeofstring << " " << size_of_the_new_file << std::endl;
+        if (sizeofstring + size_of_the_new_file < MAX_FILE_SIZE) {
+            std::cout << "Size is less" << std::endl;
+            size_of_the_new_file += sizeofstring;
+            std::cout << "Old: " << s;
+        } else {
+            std::cout << "Size is exceeded" << std::endl;
+            size_of_the_new_file = sizeofstring;
+            std::cout << "New: " << s;
+        }
     }
     static void* Process(void*) {
         while (run) {
@@ -122,6 +142,11 @@ class Logger {
         }
         return nullptr;
     }
+
+    const std::string filename;
+
+    unsigned long size_of_the_new_file;
+    int count;
 
     static volatile bool run;
     static std::deque<DataForLog<Logger>*> log_queue;

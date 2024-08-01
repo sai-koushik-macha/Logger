@@ -10,7 +10,7 @@ enum class EnumLoggerTypes { Default = 0, LoggerType1 = 1, LoggerType2 = 2 };
 struct LoggerType1 {
     int number;
 
-    inline std::string_view print() noexcept {
+    inline std::string print() noexcept {
         return "Derived 1 " + std::to_string(number);
     }
 
@@ -21,7 +21,7 @@ struct LoggerType2 {
     int number;
     char h;
 
-    inline std::string_view print() noexcept {
+    inline std::string print() noexcept {
         std::cout << "Derived 2 " << number << h << '\n';
         return "Derived 2 " + std::to_string(number) + " " + h;
     }
@@ -66,8 +66,8 @@ inline void DellocateFromMempool(Mempool& mempool, EnumLoggerTypes derived_type,
     }
 }
 
-inline std::string_view PrintType(EnumLoggerTypes derived_type,
-                                  void* pointer) noexcept {
+inline std::string PrintType(EnumLoggerTypes derived_type,
+                             void* pointer) noexcept {
 #define CASECHECKPRINT(TYPE)                     \
     case EnumLoggerTypes::TYPE: {                \
         auto data = static_cast<TYPE*>(pointer); \

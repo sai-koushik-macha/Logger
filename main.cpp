@@ -21,7 +21,7 @@ int main() {
     // logger.logObj(true, true, LOGLOCATION, log2_helper);
     auto test = Logger::getObj<LoggerType1>();
     test->number = 10;
-    Logger::Log(&logger, true, true, test);
+    Logger::Log(&logger, true, true, true, test);
 
     while (run_application) {
     }
