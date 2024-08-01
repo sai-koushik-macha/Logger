@@ -4,11 +4,7 @@
 #include <pthread.h>
 #include <sched.h>
 
-#include <cstdarg>
 #include <deque>
-#include <fstream>
-#include <iostream>
-#include <ostream>
 #include <source_location>
 
 #include "LoggerTypeBase.h"
