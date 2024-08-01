@@ -106,11 +106,10 @@ class Logger {
                   << "\n";
     }
     static void* Process(void*) {
-        DataForLog<Logger>* data_log = nullptr;
         while (run) {
             sp.lock();
             if (log_queue.size()) {
-                data_log = log_queue.front();
+                DataForLog<Logger>* data_log = log_queue.front();
                 log_queue.pop_front();
                 sp.unlock();
                 data_log->logger_pointer->LogHelper(data_log);
@@ -120,7 +119,6 @@ class Logger {
                 mempool.deallocate(data_log);
             }
             sp.unlock();
-            data_log = nullptr;
         }
         return nullptr;
     }
