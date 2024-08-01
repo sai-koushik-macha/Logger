@@ -47,12 +47,6 @@ class Logger {
         }
     }
 
-    void LogHelper(char const* format, ...) {
-        va_list args;
-        va_start(args, format);
-        va_end(args);
-    }
-
     template <typename T, typename... Args>
     void log(const bool _log_time, const bool _log_location,
              const std::source_location& _logging_location,
