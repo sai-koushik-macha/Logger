@@ -57,17 +57,16 @@ class Logger {
 
         if (use_thread) {
             sp.lock();
-        }
-        auto data = mempool.allocate<T>();
-        data->log(_log_time, _log_location, _logging_location,
-                  std::forward<Args>(args)...);
-        log_queue.emplace_back(getType<T>(), data);
-        if (use_thread) {
+            auto data = mempool.allocate<T>();
+            data->log(_log_time, _log_location, _logging_location,
+                      std::forward<Args>(args)...);
+            log_queue.emplace_back(getType<T>(), data);
             sp.unlock();
-        }
-
-        if (!use_thread) {
-            print();
+        } else {
+            T data;
+            data.log(_log_time, _log_location, _logging_location,
+                     std::forward<Args>(args)...);
+            PrintHelper(getType<T>(), &data);
         }
     }
 
@@ -98,13 +97,10 @@ class Logger {
 
         if (use_thread) {
             sp.lock();
-        }
-        log_queue.emplace_back(getType<T>(), pointer);
-        if (use_thread) {
+            log_queue.emplace_back(getType<T>(), pointer);
             sp.unlock();
-        }
-        if (!use_thread) {
-            print();
+        } else {
+            PrintHelper(getType<T>(), pointer);
         }
     }
 
@@ -136,6 +132,11 @@ class Logger {
         return false;
     }
 
+    inline void PrintHelper(const auto& derived_type,
+                            auto DataPointer) noexcept {
+        PrintDerivedClass(this, derived_type, DataPointer);
+    }
+
     inline void print() noexcept {
         DataForLog data;
         if (use_thread) {
@@ -146,7 +147,7 @@ class Logger {
             sp.unlock();
         }
         if (has_data) {
-            PrintDerivedClass(this, data.derived_type, data.pointer);
+            PrintHelper(data.derived_type, data.pointer);
         }
     }
 
