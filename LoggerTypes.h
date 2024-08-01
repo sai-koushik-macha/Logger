@@ -1,7 +1,7 @@
 #ifndef LOGGERTYPESDERIVED_H_
 #define LOGGERTYPESDERIVED_H_
 
-#include <iostream>
+#include <string>
 
 #include "Mempool.h"
 
@@ -22,7 +22,6 @@ struct LoggerType2 {
     char h;
 
     inline std::string print() noexcept {
-        std::cout << "Derived 2 " << number << h << '\n';
         return "Derived 2 " + std::to_string(number) + " " + h;
     }
 

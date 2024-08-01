@@ -7,6 +7,7 @@
 #include <chrono>
 #include <deque>
 #include <format>
+#include <iostream>
 #include <source_location>
 
 #include "LoggerTypes.h"
