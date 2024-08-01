@@ -10,9 +10,8 @@ enum class EnumDerivedTypes { Default = 0, LoggerType1 = 1, LoggerType2 = 2 };
 struct LoggerType1 {
     int number;
 
-    template <typename LoggerType>
-    inline void print(LoggerType* logger) noexcept {
-        std::cout << "Derived 1 " << number << '\n';
+    inline std::string_view print() noexcept {
+        return "Derived 1 " + std::to_string(number);
     }
 
     inline void log(const int& _number) noexcept { number = _number; }
@@ -22,9 +21,9 @@ struct LoggerType2 {
     int number;
     char h;
 
-    template <typename LoggerType>
-    inline void print(LoggerType* logger) noexcept {
+    inline std::string_view print() noexcept {
         std::cout << "Derived 2 " << number << h << '\n';
+        return "Derived 2 " + std::to_string(number) + " " + h;
     }
 
     inline void log(const int& _number, const char& _h) noexcept {
@@ -68,13 +67,12 @@ inline void DellocateFromMempool(Mempool& mempool,
     }
 }
 
-template <typename T>
-inline void PrintDerivedClass(T* logger_type, EnumDerivedTypes derived_type,
-                              void* pointer) noexcept {
+inline std::string_view PrintDerivedClass(EnumDerivedTypes derived_type,
+                                          void* pointer) noexcept {
 #define CASECHECKPRINT(DERIVED_TYPE)                     \
     case EnumDerivedTypes::DERIVED_TYPE: {               \
         auto data = static_cast<DERIVED_TYPE*>(pointer); \
-        data->print(logger_type);                        \
+        return data->print();                            \
         break;                                           \
     }
 
@@ -85,6 +83,7 @@ inline void PrintDerivedClass(T* logger_type, EnumDerivedTypes derived_type,
             break;
         }
     }
+    return "";
 }
 
 #endif /* LOGGERTYPESDERIVED_H_ */

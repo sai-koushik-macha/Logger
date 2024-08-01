@@ -15,6 +15,6 @@ FetchContent_MakeAvailable(fmt)
 
 
 
-add_executable(Logger main.cpp)
+add_executable(Logger Logger.cpp main.cpp)
 
 target_link_libraries(Logger fmt::fmt)

@@ -14,132 +14,102 @@
 
 #define LOGLOCATION std::source_location::current()
 
+template <typename T>
 struct DataForLog {
+    bool log_time;
+    bool log_location;
+    std::source_location location;
+    T* logger_pointer;
     EnumDerivedTypes derived_type;
     void* pointer;
-    DataForLog() : derived_type(EnumDerivedTypes::Default), pointer(nullptr) {}
-    DataForLog(EnumDerivedTypes _derived_type, void* _pointer)
-        : derived_type(_derived_type), pointer(_pointer) {}
+    std::chrono::system_clock::time_point time_now;
+
+    DataForLog(T* logger_pointer, EnumDerivedTypes _derived_type,
+               void* _pointer, bool _log_time, bool _log_location,
+               const std::source_location& location_)
+        : derived_type(_derived_type),
+          pointer(_pointer),
+          logger_pointer(logger_pointer),
+          log_time(_log_time),
+          log_location(_log_location) {
+        if (log_location) {
+            location = location_;
+        }
+        if (log_time) {
+            time_now = std::chrono::system_clock::now();
+        }
+    }
 };
 
 class Logger {
    public:
-    Logger(char* filename_, bool use_thread_, int _core_id = -1)
-        : use_thread(use_thread_), core_id(_core_id) {
-        if (use_thread) {
-            run = true;
-            pthread_create(&thread, nullptr, Logger::processor, this);
-        }
+    Logger(char* filename_) {}
+
+    ~Logger() {}
+
+    static void StartThreadProcessing(int _core_id) {
+        run = true;
+
+        core_id = _core_id;
+        pthread_create(&thread, nullptr, Logger::Process, nullptr);
     }
 
-    ~Logger() {
+    static void StopThreadProcessing() {
         if (use_thread) {
             run = false;
             pthread_join(thread, nullptr);
         }
-        DataForLog data;
-        while (DataAssignAndDellocateHelper(data)) {
-            PrintDerivedClass(this, data.derived_type, data.pointer);
-        }
-    }
-
-    template <typename T, typename... Args>
-    void log(const bool _log_time, const bool _log_location,
-             const std::source_location& _logging_location,
-             Args&&... args) noexcept {
-        if (use_thread) {
-            sp.lock();
-            auto data = mempool.allocate<T>();
-            data->log(std::forward<Args>(args)...);
-            log_queue.emplace_back(getType<T>(), data);
-            sp.unlock();
-        } else {
-            T data;
-            data.log(std::forward<Args>(args)...);
-            PrintHelper(getType<T>(), &data);
-        }
     }
 
     template <typename T>
-    auto getPrintHelperObj() {
-        T* obj = nullptr;
-        if (use_thread) {
-            sp.lock();
-            obj = mempool.allocate<T>();
-            sp.unlock();
-        } else {
-            obj = mempool.allocate<T>();
-        }
-        return obj;
+    static T* getObj() {
+        std::lock_guard<SpinLock> lock_g(Logger::sp);
+        return mempool.allocate<T>();
     }
 
     template <typename T>
-    void logObj(const bool _log_time, const bool _log_location,
-                const std::source_location& _logging_location,
-                T* pointer) noexcept {
+    static void Log(Logger* logger, bool log_time_, bool log_location_, T* data,
+                    const std::source_location& location =
+                        std::source_location::current()) {
         if (use_thread) {
-            sp.lock();
-            log_queue.emplace_back(getType<T>(), pointer);
-            sp.unlock();
+            // auto pointer = mempool.allocate<DataForLog<Logger>>(getType<T>(),
+            // data, logger);
         } else {
-            PrintHelper(getType<T>(), pointer);
+            DataForLog<Logger> data_log(logger, getType<T>(), data, log_time_,
+                                        log_location_, location);
+            logger->LogHelper(&data_log);
         }
     }
 
    private:
-    static void* processor(void* arg) {
-        auto obj = static_cast<Logger*>(arg);
-        obj->Process();
+    void LogHelper(DataForLog<Logger>* data_log) {
+        std::string s;
+        if (data_log->log_time) {
+            s += fmt::format("[{}] ", data_log->time_now);
+        }
+        if (data_log->log_location) {
+            s += fmt::format("[{} {} {}] ", data_log->location.file_name(),
+                             data_log->location.function_name(),
+                             data_log->location.line());
+        }
+        std::cout << s;
+        std::cout << PrintDerivedClass(data_log->derived_type,
+                                       data_log->pointer)
+                  << "\n";
+    }
+    static void* Process(void*) {
+        while (run) {
+        }
         return nullptr;
     }
 
-    void Process() {
-        cpu_set_t cpuset;
-        CPU_ZERO(&cpuset);
-        CPU_SET(core_id, &cpuset);
-        pthread_setaffinity_np(pthread_self(), sizeof(cpuset), &cpuset);
-
-        while (run) {
-            print();
-        }
-    }
-
-    inline bool DataAssignAndDellocateHelper(DataForLog& data) noexcept {
-        if (log_queue.size()) {
-            data = log_queue.front();
-            log_queue.pop_front();
-            DellocateFromMempool(mempool, data.derived_type, data.pointer);
-            return true;
-        }
-        return false;
-    }
-
-    inline void PrintHelper(const auto& derived_type,
-                            auto DataPointer) noexcept {
-        PrintDerivedClass(this, derived_type, DataPointer);
-    }
-
-    inline void print() noexcept {
-        DataForLog data;
-        if (use_thread) {
-            sp.lock();
-        }
-        auto has_data = DataAssignAndDellocateHelper(data);
-        if (use_thread) {
-            sp.unlock();
-        }
-        if (has_data) {
-            PrintHelper(data.derived_type, data.pointer);
-        }
-    }
-
-    volatile bool run;
-    std::deque<DataForLog> log_queue;
-    SpinLock sp;
-    Mempool mempool;
-    const bool use_thread;
-    const int core_id;
-    pthread_t thread;
+    static volatile bool run;
+    static std::deque<DataForLog<Logger>*> log_queue;
+    static SpinLock sp;
+    static Mempool mempool;
+    static bool use_thread;
+    static int core_id;
+    static pthread_t thread;
 };
 
 #endif /* LOGGER_H_ */
