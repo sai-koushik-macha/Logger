@@ -1,5 +1,5 @@
-#ifndef LOGGER_HELPER_H_
-#define LOGGER_HELPER_H_
+#ifndef LOGGER_H_
+#define LOGGER_H_
 
 #include <pthread.h>
 #include <sched.h>
@@ -165,4 +165,4 @@ class Logger {
     pthread_t thread;
 };
 
-#endif /* LOGGER_HELPER_H_ */
+#endif /* LOGGER_H_ */

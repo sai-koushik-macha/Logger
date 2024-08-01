@@ -1,6 +1,6 @@
 #include <csignal>
 
-#include "LoggerHelper.h"
+#include "Logger.h"
 
 volatile bool run_application = true;
 
