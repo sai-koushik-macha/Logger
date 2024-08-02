@@ -1,6 +1,7 @@
 #ifndef LOGGERTYPESDERIVED_H_
 #define LOGGERTYPESDERIVED_H_
 
+#include <format>
 #include <string>
 
 #include "Mempool.h"
@@ -11,7 +12,7 @@ struct LoggerType1 {
     int number;
 
     inline std::string print() noexcept {
-        return "Derived 1 " + std::to_string(number);
+        return std::format("Derived 1 {}", number);
     }
 
     inline void log(const int& _number) noexcept { number = _number; }
@@ -22,7 +23,7 @@ struct LoggerType2 {
     char h;
 
     inline std::string print() noexcept {
-        return "Derived 2 " + std::to_string(number) + " " + h;
+        return std::format("Derived 2 {} {}", number, h);
     }
 
     inline void log(const int& _number, const char& _h) noexcept {
