@@ -127,8 +127,10 @@ class Logger {
         }
     }
     static void* Process(void*) {
-        while (run) {
+        int size_of_the_queue = 0;
+        do {
             sp.lock();
+            size_of_the_queue = log_queue.size();
             if (log_queue.size()) {
                 DataForLog<Logger>* data_log = log_queue.front();
                 log_queue.pop_front();
@@ -140,7 +142,7 @@ class Logger {
                 mempool.deallocate(data_log);
             }
             sp.unlock();
-        }
+        } while (run || size_of_the_queue);
         return nullptr;
     }
 
