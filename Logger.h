@@ -5,6 +5,7 @@
 #include <sched.h>
 
 #include <chrono>
+#include <concepts>
 #include <deque>
 #include <format>
 #include <iostream>
@@ -45,6 +46,11 @@ struct DataForLog {
     }
 };
 
+template <typename T>
+concept HasPrintMethod = requires(T t, std::string& s) {
+    { t.print(s) } -> std::same_as<void>;
+};
+
 class Logger {
    public:
     Logger(std::string_view filename_)
@@ -75,8 +81,12 @@ class Logger {
         }
     }
 
-    template <typename T>
+    template <HasPrintMethod T>
     static T* getObj() {
+        static_assert(HasPrintMethod<T>,
+                      "The log Obj you wanted to print should have print "
+                      "method which returns void and take string as reference "
+                      "and assign that string the message you want to print");
         if (use_thread) {
             sp.lock();
         }
@@ -87,7 +97,7 @@ class Logger {
         return pointer;
     }
 
-    template <typename T>
+    template <HasPrintMethod T>
     static void Log(Logger* logger, bool log_time_, bool log_location_,
                     bool new_line_, T* data,
                     const std::source_location& location =
