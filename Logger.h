@@ -118,7 +118,10 @@ class Logger {
                              data_log->location.function_name(),
                              data_log->location.line());
         }
-        s += PrintType(data_log->logger_type, data_log->pointer);
+        std::string data_to_actually_print;
+        PrintType(data_log->logger_type, data_log->pointer,
+                  data_to_actually_print);
+        s += data_to_actually_print;
         if (data_log->new_line) {
             s += '\n';
         }

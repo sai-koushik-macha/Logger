@@ -11,24 +11,17 @@ enum class EnumLoggerTypes { Default = 0, LoggerType1 = 1, LoggerType2 = 2 };
 struct LoggerType1 {
     int number;
 
-    inline std::string print() noexcept {
-        return std::format("Derived 1 {}", number);
+    inline void print(std::string& data_to_print) noexcept {
+        data_to_print = std::format("Derived 1 {}", number);
     }
-
-    inline void log(const int& _number) noexcept { number = _number; }
 };
 
 struct LoggerType2 {
     int number;
     char h;
 
-    inline std::string print() noexcept {
-        return std::format("Derived 2 {} {}", number, h);
-    }
-
-    inline void log(const int& _number, const char& _h) noexcept {
-        number = _number;
-        h = _h;
+    inline void print(std::string& data_to_print) noexcept {
+        data_to_print = std::format("Derived 2 {} {}", number, h);
     }
 };
 
@@ -66,12 +59,12 @@ inline void DellocateFromMempool(Mempool& mempool, EnumLoggerTypes derived_type,
     }
 }
 
-inline std::string PrintType(EnumLoggerTypes derived_type,
-                             void* pointer) noexcept {
+inline void PrintType(EnumLoggerTypes derived_type, void* pointer,
+                      std::string& data_to_print) noexcept {
 #define CASECHECKPRINT(TYPE)                     \
     case EnumLoggerTypes::TYPE: {                \
         auto data = static_cast<TYPE*>(pointer); \
-        return data->print();                    \
+        data->print(data_to_print);              \
         break;                                   \
     }
 
@@ -82,7 +75,6 @@ inline std::string PrintType(EnumLoggerTypes derived_type,
             break;
         }
     }
-    return "";
 }
 
 #endif /* LOGGERTYPESDERIVED_H_ */
