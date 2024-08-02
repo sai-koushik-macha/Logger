@@ -52,6 +52,8 @@ class Logger {
 
     ~Logger() {}
 
+    // Once thread processing started you can multiple threads can log to same
+    // file if needed
     static void StartThreadProcessing(int _core_id) {
         run = true;
 
@@ -60,6 +62,11 @@ class Logger {
         pthread_create(&thread, nullptr, Logger::Process, nullptr);
     }
 
+    // This method should be called at the end of the program when all the
+    // logging is done From this point logging won't asynchronous when this
+    // method is called don't log from a different thread the log will be missed
+    // Once this method call is completed multiple threads shouldn't log to the
+    // same file
     static void StopThreadProcessing() {
         if (use_thread) {
             run = false;
