@@ -64,6 +64,7 @@ class Logger {
         if (use_thread) {
             run = false;
             pthread_join(thread, nullptr);
+            use_thread = false;
         }
     }
 
