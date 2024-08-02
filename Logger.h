@@ -71,11 +71,11 @@ class Logger {
     template <typename T>
     static T* getObj() {
         if (use_thread) {
-            Logger::sp.lock();
+            sp.lock();
         }
         auto pointer = mempool.allocate<T>();
         if (use_thread) {
-            Logger::sp.unlock();
+            sp.unlock();
         }
         return pointer;
     }
