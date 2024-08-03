@@ -47,7 +47,7 @@ struct DataForLog {
 };
 
 template <typename T>
-concept HasPrintMethod = requires(T t, std::string& s) {
+concept HasPrintMethod = requires(T t, std::string* s) {
     { t.print(s) } -> std::same_as<void>;
 };
 
@@ -81,12 +81,12 @@ class Logger {
         }
     }
 
+    // Use this method for getting of object from different logger types
+    // you want to print but the obj needs to implement print method which takes
+    // string pointer as input and assign the pointer to whatever you want to
+    // print
     template <HasPrintMethod T>
     static T* getObj() {
-        static_assert(HasPrintMethod<T>,
-                      "The log Obj you wanted to print should have print "
-                      "method which returns void and take string as reference "
-                      "and assign that string the message you want to print");
         if (use_thread) {
             sp.lock();
         }
@@ -97,6 +97,13 @@ class Logger {
         return pointer;
     }
 
+    // After the values for the print object has been assigned
+    // call this method for printing
+    // Logger object
+    // can choose to print time, location from where the printing is happening
+    // (from where the obj is passed to logger)
+    // whether to print new line or not
+    // pointer that has been taken for the printing purpose
     template <HasPrintMethod T>
     static void Log(Logger* logger, bool log_time_, bool log_location_,
                     bool new_line_, T* data,
@@ -130,7 +137,7 @@ class Logger {
         }
         std::string data_to_actually_print;
         PrintType(data_log->logger_type, data_log->pointer,
-                  data_to_actually_print);
+                  &data_to_actually_print);
         s += data_to_actually_print;
         if (data_log->new_line) {
             s += '\n';
