@@ -57,7 +57,7 @@ struct FileWrapper {
     }
 
     int count{};
-    static constexpr unsigned long max_size = 1024;
+    static constexpr unsigned long max_size = 2251799813;
     std::string filename;
     unsigned long size_used{};
     std::fstream file;
@@ -218,13 +218,5 @@ class Logger {
     static int core_id;
     static pthread_t thread;
 };
-
-volatile bool Logger::run = false;
-std::deque<DataForLog<Logger>*> Logger::log_queue = {};
-SpinLock Logger::sp = {};
-bool Logger::use_thread = false;
-Mempool Logger::mempool = {};
-int Logger::core_id = -1;
-pthread_t Logger::thread = {};
 
 #endif /* LOGGER_H_ */

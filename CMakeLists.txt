@@ -7,6 +7,5 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 
-# add_executable(Logger Logger.cpp main.cpp)
-add_executable(Logger  main.cpp)
+add_executable(Logger Logger.cpp main.cpp)
 

@@ -19,9 +19,16 @@ int main() {
     // auto log2_helper = logger.getPrintHelperObj<LoggerType2>();
     // log2_helper->h = 'h';
     // logger.logObj(true, true, LOGLOCATION, log2_helper);
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 10000000; i++) {
         auto test = Logger::getObj<LoggerType1>();
         test->number = 10;
+        Logger::Log(&logger, true, true, true, test);
+    }
+
+    for (int i = 0; i < 10000000; i++) {
+        auto test = Logger::getObj<LoggerType2>();
+        test->number = 10;
+        test->h = 'h';
         Logger::Log(&logger, true, true, true, test);
     }
 
