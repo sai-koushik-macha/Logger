@@ -18,6 +18,10 @@
 #include "Mempool.h"
 #include "SpinLock.h"
 
+#ifdef LATENCY_FINDING
+#include "latency_profile.h"
+#endif
+
 struct FileWrapper {
     explicit FileWrapper(std::string_view filename_) noexcept {
         filename = filename_;
@@ -217,6 +221,14 @@ class Logger {
     static bool use_thread;
     static int core_id;
     static pthread_t thread;
+
+#ifdef LATENCY_FINDING
+    static LatencyProfilingStats latency_1;
+    static LatencyProfilingStats latency_2;
+    static LatencyProfilingStats latency_3;
+    static LatencyProfilingStats latency_4;
+    static LatencyProfilingStats latency_5;
+#endif
 };
 
 #endif /* LOGGER_H_ */
