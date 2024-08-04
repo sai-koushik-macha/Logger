@@ -11,7 +11,7 @@ inline void signal_handler(int signal) noexcept {
 
 int main() {
     Logger::StartThreadProcessing(-1);
-    Logger logger("Hi.txt");
+    Logger logger("LOGFILE_TESTING");
     std::signal(SIGINT, signal_handler);
     // logger.log<LoggerType1>(true, true, LOGLOCATION, 1024);
     // logger.log<LoggerType1>(true, false, LOGLOCATION, 10);
@@ -19,9 +19,11 @@ int main() {
     // auto log2_helper = logger.getPrintHelperObj<LoggerType2>();
     // log2_helper->h = 'h';
     // logger.logObj(true, true, LOGLOCATION, log2_helper);
-    auto test = Logger::getObj<LoggerType1>();
-    test->number = 10;
-    Logger::Log(&logger, true, true, true, test);
+    for (int i = 0; i < 100; i++) {
+        auto test = Logger::getObj<LoggerType1>();
+        test->number = 10;
+        Logger::Log(&logger, true, true, true, test);
+    }
 
     while (run_application) {
     }

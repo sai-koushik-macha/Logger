@@ -3,19 +3,65 @@
 
 #include <pthread.h>
 #include <sched.h>
+#include <unistd.h>
 
 #include <chrono>
 #include <concepts>
 #include <deque>
 #include <format>
+#include <fstream>
 #include <iostream>
 #include <source_location>
+#include <string>
 
 #include "LoggerTypes.h"
 #include "Mempool.h"
 #include "SpinLock.h"
 
-#define MAX_FILE_SIZE 3068
+struct FileWrapper {
+    explicit FileWrapper(std::string_view filename_) noexcept {
+        filename = filename_;
+        filename += "_";
+        filename += std::to_string(getpid());
+        filename += "_";
+        createFile();
+    }
+    FileWrapper() = delete;
+    FileWrapper(const FileWrapper&) = delete;
+    FileWrapper(const FileWrapper&&) = delete;
+    FileWrapper operator=(const FileWrapper&) = delete;
+    FileWrapper operator=(const FileWrapper&&) = delete;
+    ~FileWrapper() noexcept { closeFile(); }
+
+    inline void closeFile() noexcept {
+        if (file.is_open()) {
+            file.close();
+        }
+    }
+    inline void createFile() noexcept {
+        closeFile();
+        size_used = 0;
+        file.open(filename + (count < 0 ? '0' + std::to_string(count)
+                                        : std::to_string(count)),
+                  std::ios::out);
+    }
+
+    inline void WritetoFile(const std::string& data) noexcept {
+        const unsigned long length_of_string = data.length();
+        if (length_of_string + size_used > max_size) {
+            count++;
+            createFile();
+        }
+        file.write(data.c_str(), length_of_string);
+        size_used += length_of_string;
+    }
+
+    int count{};
+    static constexpr unsigned long max_size = 1024;
+    std::string filename;
+    unsigned long size_used{};
+    std::fstream file;
+};
 
 template <typename T>
 struct DataForLog {
@@ -53,8 +99,7 @@ concept HasPrintMethod = requires(T t, std::string* s) {
 
 class Logger {
    public:
-    Logger(std::string_view filename_)
-        : count(0), filename(filename_), size_of_the_new_file(0) {}
+    Logger(std::string_view filename_) : filewrapper(filename_) {}
 
     ~Logger() {}
 
@@ -142,17 +187,7 @@ class Logger {
         if (data_log->new_line) {
             s += '\n';
         }
-        int sizeofstring = s.length();
-        std::cout << sizeofstring << " " << size_of_the_new_file << std::endl;
-        if (sizeofstring + size_of_the_new_file < MAX_FILE_SIZE) {
-            std::cout << "Size is less" << std::endl;
-            size_of_the_new_file += sizeofstring;
-            std::cout << "Old: " << s;
-        } else {
-            std::cout << "Size is exceeded" << std::endl;
-            size_of_the_new_file = sizeofstring;
-            std::cout << "New: " << s;
-        }
+        filewrapper.WritetoFile(s);
     }
     static void* Process(void*) {
         int size_of_the_queue = 0;
@@ -174,11 +209,7 @@ class Logger {
         return nullptr;
     }
 
-    const std::string filename;
-
-    unsigned long size_of_the_new_file;
-    int count;
-
+    FileWrapper filewrapper;
     static volatile bool run;
     static std::deque<DataForLog<Logger>*> log_queue;
     static SpinLock sp;
@@ -187,5 +218,13 @@ class Logger {
     static int core_id;
     static pthread_t thread;
 };
+
+volatile bool Logger::run = false;
+std::deque<DataForLog<Logger>*> Logger::log_queue = {};
+SpinLock Logger::sp = {};
+bool Logger::use_thread = false;
+Mempool Logger::mempool = {};
+int Logger::core_id = -1;
+pthread_t Logger::thread = {};
 
 #endif /* LOGGER_H_ */
