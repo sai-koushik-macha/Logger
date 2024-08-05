@@ -44,6 +44,10 @@ class LatencyProfilingStats {
 
    public:
     std::string get_the_stats() {
+        if (latencies.empty()) {
+            return "Latency of " + identifier + " Is empty";
+        }
+
         unsigned long n = 0;
         unsigned long total_sum = 0;
         unsigned long mean = 0;

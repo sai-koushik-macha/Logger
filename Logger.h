@@ -10,7 +10,6 @@
 #include <deque>
 #include <format>
 #include <fstream>
-#include <iostream>
 #include <source_location>
 #include <string>
 
@@ -19,6 +18,9 @@
 #include "SpinLock.h"
 
 #ifdef LATENCY_FINDING
+
+#include <iostream>
+
 #include "latency_profile.h"
 #endif
 
@@ -129,6 +131,16 @@ class Logger {
             use_thread = false;
         }
     }
+
+#ifdef LATENCY_FINDING
+    static void PrintLatencies() {
+        std::cout << latency_1.get_the_stats() << std::endl;
+        std::cout << latency_2.get_the_stats() << std::endl;
+        std::cout << latency_3.get_the_stats() << std::endl;
+        std::cout << latency_4.get_the_stats() << std::endl;
+        std::cout << latency_5.get_the_stats() << std::endl;
+    }
+#endif
 
     // Use this method for getting of object from different logger types
     // you want to print but the obj needs to implement print method which takes

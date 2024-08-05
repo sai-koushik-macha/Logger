@@ -1,4 +1,5 @@
 #include <csignal>
+#include <iostream>
 #include <random>
 
 #include "Logger.h"
@@ -45,7 +46,11 @@ int main() {
     }
     Logger::StopThreadProcessing();
 
-    std::cout << "Latency of Writing: " << objget.get_the_stats() << std::endl;
-    std::cout << "Latency of Writing: " << objlog.get_the_stats() << std::endl;
+    std::cout << std::endl;
+    std::cout << objlog.get_the_stats() << std::endl;
+
+#ifdef LATENCY_FINDING
+    Logger::PrintLatencies();
+#endif
     return 0;
 }
