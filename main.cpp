@@ -40,13 +40,16 @@ int main() {
         Logger::Log(&logger, true, true, true, test);
         objlog.end();
         volatile int work = 0;
+        for (volatile int j = 0; j < 100; j = j + 1) {
+            work = j + work;
+        }
     }
 
     while (run_application) {
     }
     Logger::StopThreadProcessing();
 
-    std::cout << std::endl;
+    std::cout << objget.get_the_stats() << std::endl;
     std::cout << objlog.get_the_stats() << std::endl;
 
 #ifdef LATENCY_FINDING

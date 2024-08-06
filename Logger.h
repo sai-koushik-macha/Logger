@@ -7,6 +7,7 @@
 
 #include <chrono>
 #include <concepts>
+#include <cstdio>
 #include <deque>
 #include <format>
 #include <fstream>
@@ -105,9 +106,14 @@ concept HasPrintMethod = requires(T t, std::string* s) {
 
 class Logger {
    public:
-    Logger(std::string_view filename_) : filewrapper(filename_) {}
+    Logger(std::string_view filename_)
+        : filewrapper(filename_), message_count(0) {}
 
-    ~Logger() {}
+    ~Logger() {
+        while (message_count != 0)
+            ;
+        printf("Logger Destructed Properly\n");
+    }
 
     // Once thread processing started you can multiple threads can log to same
     // file if needed
@@ -176,6 +182,7 @@ class Logger {
                 logger, getType<T>(), data, log_time_, log_location_, new_line_,
                 location);
             log_queue.push_back(pointer);
+            logger->message_count++;
             sp.unlock();
         } else {
             DataForLog<Logger> data_log(logger, getType<T>(), data, log_time_,
@@ -210,12 +217,13 @@ class Logger {
         do {
             sp.lock();
             size_of_the_queue = log_queue.size();
-            if (log_queue.size()) {
+            if (size_of_the_queue) {
                 DataForLog<Logger>* data_log = log_queue.front();
                 log_queue.pop_front();
                 sp.unlock();
                 data_log->logger_pointer->LogHelper(data_log);
                 sp.lock();
+                data_log->logger_pointer->message_count--;
                 DellocateFromMempool(mempool, data_log->logger_type,
                                      data_log->pointer);
                 mempool.deallocate(data_log);
@@ -226,6 +234,7 @@ class Logger {
     }
 
     FileWrapper filewrapper;
+    int message_count;
     static volatile bool run;
     static std::deque<DataForLog<Logger>*> log_queue;
     static SpinLock sp;
