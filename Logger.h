@@ -72,12 +72,12 @@ struct FileWrapper {
 
 template <typename T>
 struct DataForLog {
-    bool log_time;
-    bool log_location;
-    bool new_line;
+    const bool log_time;
+    const bool log_location;
+    const bool new_line;
     std::source_location location;
     T* logger_pointer;
-    EnumLoggerTypes logger_type;
+    const EnumLoggerTypes logger_type;
     void* pointer;
     std::chrono::system_clock::time_point time_now;
 
