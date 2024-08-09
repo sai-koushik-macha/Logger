@@ -1,7 +1,6 @@
 #ifndef LOGGER_H_
 #define LOGGER_H_
 
-#include <pthread.h>
 #include <sched.h>
 #include <unistd.h>
 
@@ -13,6 +12,7 @@
 #include <fstream>
 #include <source_location>
 #include <string>
+#include <thread>
 
 #include "LoggerTypes.h"
 #include "Mempool.h"
@@ -122,7 +122,7 @@ class Logger {
 
         use_thread = true;
         core_id = _core_id;
-        pthread_create(&thread, nullptr, Logger::Process, nullptr);
+        thread = std::thread(Logger::Process, nullptr);
     }
 
     // This method should be called at the end of the program when all the
@@ -133,7 +133,7 @@ class Logger {
     static void StopThreadProcessing() {
         if (use_thread) {
             run = false;
-            pthread_join(thread, nullptr);
+            thread.join();
             use_thread = false;
         }
     }
@@ -261,7 +261,7 @@ class Logger {
     static Mempool mempool;
     static bool use_thread;
     static int core_id;
-    static pthread_t thread;
+    static std::thread thread;
 
 #ifdef LATENCY_FINDING
     static LatencyProfilingStats latency_1;

@@ -6,7 +6,7 @@ SpinLock Logger::sp = {};
 bool Logger::use_thread = false;
 Mempool Logger::mempool = {};
 int Logger::core_id = -1;
-pthread_t Logger::thread = {};
+std::thread Logger::thread = {};
 
 #ifdef LATENCY_FINDING
 LatencyProfilingStats Logger::latency_1 = LatencyProfilingStats("GetObjMethod");
