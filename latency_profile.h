@@ -20,6 +20,7 @@ class LatencyProfilingStats {
     std::timespec startTime, endTime, delta;
     std::map<unsigned long, unsigned long> latencies;
     std::string identifier;
+    bool started_;
 
     void sub_timespec() {
         delta.tv_sec = endTime.tv_sec - startTime.tv_sec;
@@ -140,15 +141,36 @@ class LatencyProfilingStats {
         return ss.str();
     }
 
-    LatencyProfilingStats(const std::string& iden) { this->identifier = iden; }
+    LatencyProfilingStats(const std::string& iden) {
+        this->identifier = iden;
+        started_ = false;
+    }
 
-    void start() { clock_gettime(CLOCK_REALTIME, &startTime); }
+    void start() {
+        started_ = true;
+        clock_gettime(CLOCK_REALTIME, &startTime);
+    }
 
     void end() {
-        clock_gettime(CLOCK_REALTIME, &endTime);
-        sub_timespec();
-        add_to_latency();
+        if (started_) {
+            clock_gettime(CLOCK_REALTIME, &endTime);
+            sub_timespec();
+            add_to_latency();
+        }
+        started_ = false;
     }
+};
+
+class LatencyProfilingHelper {
+   private:
+    LatencyProfilingStats& latency_reference;
+
+   public:
+    explicit LatencyProfilingHelper(LatencyProfilingStats& _latency_pointer)
+        : latency_reference(_latency_pointer) {
+        latency_reference.start();
+    }
+    ~LatencyProfilingHelper() { latency_reference.end(); }
 };
 
 #endif /* LATENCY_PROFILE_H_ */

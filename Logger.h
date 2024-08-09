@@ -154,6 +154,9 @@ class Logger {
     // print
     template <HasPrintMethod T>
     static T* getObj() {
+#ifdef LATENCY_FINDING
+        LatencyProfilingHelper l(latency_1);
+#endif
         if (use_thread) {
             sp.lock();
         }
@@ -176,6 +179,9 @@ class Logger {
                     bool new_line_, T* data,
                     const std::source_location& location =
                         std::source_location::current()) {
+#ifdef LATENCY_FINDING
+        LatencyProfilingHelper l(latency_2);
+#endif
         if (use_thread) {
             sp.lock();
             auto pointer = mempool.allocate<DataForLog<Logger>>(
@@ -215,13 +221,24 @@ class Logger {
     static void* Process(void*) {
         int size_of_the_queue = 0;
         do {
+#ifdef LATENCY_FINDING
+            latency_3.start();
+#endif
             sp.lock();
             size_of_the_queue = log_queue.size();
             if (size_of_the_queue) {
                 DataForLog<Logger>* data_log = log_queue.front();
                 log_queue.pop_front();
                 sp.unlock();
+#ifdef LATENCY_FINDING
+                latency_3.end();
+                latency_4.start();
+#endif
                 data_log->logger_pointer->LogHelper(data_log);
+#ifdef LATENCY_FINDING
+                latency_4.end();
+                latency_5.start();
+#endif
                 sp.lock();
                 data_log->logger_pointer->message_count--;
                 DellocateFromMempool(mempool, data_log->logger_type,
@@ -229,6 +246,9 @@ class Logger {
                 mempool.deallocate(data_log);
             }
             sp.unlock();
+#ifdef LATENCY_FINDING
+            latency_5.end();
+#endif
         } while (run || size_of_the_queue);
         return nullptr;
     }
