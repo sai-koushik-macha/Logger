@@ -1,10 +1,10 @@
 #ifndef SPINLOCK_H_
 #define SPINLOCK_H_
 
-#include <mutex>
+#include <atomic>
 
 struct SpinLock {
-    std::mutex sp;
+    std::atomic<bool> flag;
     SpinLock() noexcept {  }
     SpinLock(const SpinLock&) = delete;
     SpinLock(SpinLock&&) = delete;
@@ -12,8 +12,16 @@ struct SpinLock {
     SpinLock& operator=(SpinLock&&) = delete;
     ~SpinLock() noexcept {  }
 
-    inline void lock() noexcept { sp.lock(); }
-    inline void unlock() noexcept { sp.unlock(); }
+    inline void lock() noexcept { 
+        while(1) {
+            if(!flag.exchange(true)) return;
+            while (flag.load())
+            {
+            }
+            
+        } 
+    }
+    inline void unlock() noexcept { flag.store(false); }
 };
 
 #endif /* SPINLOCK_H_ */
