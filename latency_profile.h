@@ -58,8 +58,9 @@ class LatencyProfilingStats {
         unsigned long lower_range = 1000000;
         unsigned long upper_range = 0;
 
-        std::map<int, unsigned long> percentiles_values = {
-            {1, 0}, {10, 0}, {25, 0}, {50, 0}, {75, 0}, {90, 0}, {99, 0}};
+        std::map<double, unsigned long> percentiles_values = {
+            {1, 0},  {10, 0},   {25, 0},    {50, 0},     {75, 0},     {90, 0},
+            {99, 0}, {99.9, 0}, {99.99, 0}, {99.999, 0}, {99.9999, 0}};
 
         for (auto it = latencies.begin(); it != latencies.end(); it++) {
             n += it->second;                      // Total number of elements
