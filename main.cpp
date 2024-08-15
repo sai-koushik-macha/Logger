@@ -35,7 +35,7 @@ int main() {
         objget.start();
         auto test = Logger::getObj<LoggerType1>();
         objget.end();
-        test->number = distrib(gen);
+        test->number = 1;
         objlog.start();
         Logger::Log(&logger, true, true, true, test);
         objlog.end();

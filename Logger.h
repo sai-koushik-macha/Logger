@@ -102,10 +102,10 @@ struct DataForLog {
         }
     }
     DataForLog() = delete;
-    DataForLog(const FileWrapper&) = delete;
-    DataForLog(const FileWrapper&&) = delete;
-    DataForLog operator=(const FileWrapper&) = delete;
-    DataForLog operator=(const FileWrapper&&) = delete;
+    DataForLog(const DataForLog&) = delete;
+    DataForLog(const DataForLog&&) = delete;
+    DataForLog operator=(const DataForLog&) = delete;
+    DataForLog operator=(const DataForLog&&) = delete;
     ~DataForLog() noexcept {}
 };
 
