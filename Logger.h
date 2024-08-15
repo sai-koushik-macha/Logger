@@ -110,8 +110,7 @@ class Logger {
         : filewrapper(filename_), message_count(0) {}
 
     ~Logger() {
-        while (message_count != 0)
-            ;
+        while (message_count != 0);
         printf("Logger Destructed Properly\n");
     }
 
@@ -127,9 +126,9 @@ class Logger {
 
     // This method should be called at the end of the program when all the
     // logging is done From this point logging won't asynchronous when this
-    // method is called don't log from a different thread the log will be missed
-    // Once this method call is completed multiple threads shouldn't log to the
-    // same file
+    // method is called don't log from a different thread the log will be
+    // missed Once this method call is completed multiple threads shouldn't log
+    // to the same file
     static void StopThreadProcessing() {
         if (use_thread) {
             run = false;
@@ -149,9 +148,9 @@ class Logger {
 #endif
 
     // Use this method for getting of object from different logger types
-    // you want to print but the obj needs to implement print method which takes
-    // string pointer as input and assign the pointer to whatever you want to
-    // print
+    // you want to print but the obj needs to implement print method which
+    // takes string pointer as input and assign the pointer to whatever you
+    // want to print
     template <HasPrintMethod T>
     static T* getObj() {
 #ifdef LATENCY_FINDING
