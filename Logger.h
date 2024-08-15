@@ -9,7 +9,6 @@
 #include <cstdio>
 #include <deque>
 #include <format>
-#include <fstream>
 #include <source_location>
 #include <string>
 #include <thread>
@@ -43,16 +42,18 @@ struct FileWrapper {
     ~FileWrapper() noexcept { closeFile(); }
 
     inline void closeFile() noexcept {
-        if (file.is_open()) {
-            file.close();
+        if (file) {
+            fclose(file);
+            file = nullptr;
         }
     }
     inline void createFile() noexcept {
         closeFile();
         size_used = 0;
-        file.open(filename + (count < 0 ? '0' + std::to_string(count)
-                                        : std::to_string(count)),
-                  std::ios::out);
+        file = fopen((filename + (count < 0 ? '0' + std::to_string(count)
+                                            : std::to_string(count)))
+                         .c_str(),
+                     "w");
     }
 
     inline void WritetoFile(const std::string& data) noexcept {
@@ -61,7 +62,7 @@ struct FileWrapper {
             count++;
             createFile();
         }
-        file.write(data.c_str(), length_of_string);
+        fprintf(file, "%s", data.c_str());
         size_used += length_of_string;
     }
 
@@ -69,7 +70,7 @@ struct FileWrapper {
     static constexpr unsigned long max_size = 2251799813;
     std::string filename;
     unsigned long size_used{};
-    std::fstream file;
+    FILE* file{};
 };
 
 struct DataForLog {
