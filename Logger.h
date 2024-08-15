@@ -77,14 +77,15 @@ struct DataForLog {
     const bool log_location;
     const bool new_line;
     std::source_location location;
-    Logger* logger_pointer;
+    Logger* const logger_pointer;
     const EnumLoggerTypes logger_type;
-    void* pointer;
+    const void* const pointer;
     std::chrono::system_clock::time_point time_now;
 
-    DataForLog(Logger* logger_pointer, EnumLoggerTypes _logger_type,
-               void* _pointer, bool _log_time, bool _log_location,
-               bool _new_line, const std::source_location& location_) noexcept
+    DataForLog(Logger* const logger_pointer, const EnumLoggerTypes _logger_type,
+               void* _pointer, const bool _log_time, const bool _log_location,
+               const bool _new_line,
+               const std::source_location& location_) noexcept
         : logger_type(_logger_type),
           pointer(_pointer),
           logger_pointer(logger_pointer),

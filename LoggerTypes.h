@@ -17,7 +17,7 @@ enum class EnumLoggerTypes { Default = 0, LoggerType1 = 1, LoggerType2 = 2 };
 struct LoggerType1 {
     int number;
 
-    inline void print(std::string* data_to_print) noexcept {
+    inline void print(std::string* data_to_print) const noexcept {
         *data_to_print = std::format("Derived 1 {}", number);
     }
 };
@@ -26,7 +26,7 @@ struct LoggerType2 {
     int number;
     char h;
 
-    inline void print(std::string* data_to_print) noexcept {
+    inline void print(std::string* data_to_print) const noexcept {
         *data_to_print = std::format("Derived 2 {} {}", number, h);
     }
 };
@@ -59,13 +59,15 @@ inline EnumLoggerTypes getType() noexcept {
 // This is for internal class usage
 // Use the CASECHECKMEMPOOLDELLOCATE inside the switch statement by giving your
 // class name as input
-inline void DellocateFromMempool(Mempool& mempool, EnumLoggerTypes derived_type,
-                                 void* pointer) noexcept {
-#define CASECHECKMEMPOOLDELLOCATE(TYPE)          \
-    case EnumLoggerTypes::TYPE: {                \
-        auto data = static_cast<TYPE*>(pointer); \
-        mempool.deallocate(data);                \
-        break;                                   \
+inline void DellocateFromMempool(Mempool& mempool,
+                                 const EnumLoggerTypes derived_type,
+                                 void const* const pointer) noexcept {
+#define CASECHECKMEMPOOLDELLOCATE(TYPE)                                       \
+    case EnumLoggerTypes::TYPE: {                                             \
+        auto data =                                                           \
+            const_cast<TYPE* const>(static_cast<TYPE const* const>(pointer)); \
+        mempool.deallocate(data);                                             \
+        break;                                                                \
     }
 
     switch (derived_type) {
@@ -80,13 +82,14 @@ inline void DellocateFromMempool(Mempool& mempool, EnumLoggerTypes derived_type,
 // This is for calling print method based on type
 // Inside the switch statement call CASECHECKPRINT macro by giving class name as
 // input
-inline void PrintType(EnumLoggerTypes derived_type, void* pointer,
+inline void PrintType(const EnumLoggerTypes derived_type,
+                      void const* const pointer,
                       std::string* data_to_print) noexcept {
-#define CASECHECKPRINT(TYPE)                     \
-    case EnumLoggerTypes::TYPE: {                \
-        auto data = static_cast<TYPE*>(pointer); \
-        data->print(data_to_print);              \
-        break;                                   \
+#define CASECHECKPRINT(TYPE)                                 \
+    case EnumLoggerTypes::TYPE: {                            \
+        auto data = static_cast<TYPE const* const>(pointer); \
+        data->print(data_to_print);                          \
+        break;                                               \
     }
 
     switch (derived_type) {
