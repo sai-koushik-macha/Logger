@@ -126,6 +126,7 @@ class Logger {
                                    int _core_id = -1) noexcept {
         RegisterLogDerivedTypes(mempool);
         if (start_thread) {
+            mempool.Register<DataForLog<Logger>>();
             StartThreadProcessing(_core_id);
         }
     }
