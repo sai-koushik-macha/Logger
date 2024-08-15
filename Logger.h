@@ -83,7 +83,7 @@ struct DataForLog {
 
     DataForLog(T* logger_pointer, EnumLoggerTypes _logger_type, void* _pointer,
                bool _log_time, bool _log_location, bool _new_line,
-               const std::source_location& location_)
+               const std::source_location& location_) noexcept
         : logger_type(_logger_type),
           pointer(_pointer),
           logger_pointer(logger_pointer),
@@ -97,6 +97,12 @@ struct DataForLog {
             time_now = std::chrono::system_clock::now();
         }
     }
+    DataForLog() = delete;
+    DataForLog(const FileWrapper&) = delete;
+    DataForLog(const FileWrapper&&) = delete;
+    DataForLog operator=(const FileWrapper&) = delete;
+    DataForLog operator=(const FileWrapper&&) = delete;
+    ~DataForLog() noexcept {}
 };
 
 template <typename T>
@@ -116,18 +122,18 @@ class Logger {
 
     // Start The Logger
     // Can do multi threading based logging
-    static void StartLogger(bool start_thread = false,
-                            int _core_id = -1) noexcept {
+    static inline void StartLogger(bool start_thread = false,
+                                   int _core_id = -1) noexcept {
         RegisterLogDerivedTypes(mempool);
         if (start_thread) {
             StartThreadProcessing(_core_id);
         }
     }
 
-    static void StopLogger() noexcept { StopThreadProcessing(); }
+    static inline void StopLogger() noexcept { StopThreadProcessing(); }
 
 #ifdef LATENCY_FINDING
-    static void PrintLatencies() noexcept {
+    static inline void PrintLatencies() noexcept {
         std::cout << latency_1.get_the_stats() << std::endl;
         std::cout << latency_2.get_the_stats() << std::endl;
         std::cout << latency_3.get_the_stats() << std::endl;
@@ -141,7 +147,7 @@ class Logger {
     // takes string pointer as input and assign the pointer to whatever you
     // want to print
     template <HasPrintMethod T>
-    static T* getObj() noexcept {
+    static inline T* getObj() noexcept {
 #ifdef LATENCY_FINDING
         LatencyProfilingHelper l(latency_1);
 #endif
@@ -163,10 +169,10 @@ class Logger {
     // whether to print new line or not
     // pointer that has been taken for the printing purpose
     template <HasPrintMethod T>
-    static void Log(Logger* logger, bool log_time_, bool log_location_,
-                    bool new_line_, T* data,
-                    const std::source_location& location =
-                        std::source_location::current()) noexcept {
+    static inline void Log(Logger* logger, bool log_time_, bool log_location_,
+                           bool new_line_, T* data,
+                           const std::source_location& location =
+                               std::source_location::current()) noexcept {
 #ifdef LATENCY_FINDING
         LatencyProfilingHelper l(latency_2);
 #endif
@@ -187,7 +193,7 @@ class Logger {
     }
 
    private:
-    void LogHelper(DataForLog<Logger>* data_log) noexcept {
+    inline void LogHelper(DataForLog<Logger>* data_log) noexcept {
         std::string s;
         if (data_log->log_time) {
             s += std::format("[{}] ", data_log->time_now);
@@ -241,7 +247,7 @@ class Logger {
         return nullptr;
     }
 
-    static void StartThreadProcessing(int _core_id) noexcept {
+    static inline void StartThreadProcessing(int _core_id) noexcept {
         run = true;
 
         use_thread = true;
@@ -249,7 +255,7 @@ class Logger {
         thread = std::thread(Logger::Process, nullptr);
     }
 
-    static void StopThreadProcessing() noexcept {
+    static inline void StopThreadProcessing() noexcept {
         if (use_thread) {
             run = false;
             thread.join();
