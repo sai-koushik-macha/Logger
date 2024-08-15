@@ -31,6 +31,12 @@ struct LoggerType2 {
     }
 };
 
+inline void RegisterLogDerivedTypes(Mempool& mempool) noexcept {
+#define REGISTERTYPEHELPER(TYPE) mempool.Register<TYPE>()
+    REGISTERTYPEHELPER(LoggerType1);
+    REGISTERTYPEHELPER(LoggerType2);
+}
+
 // This is mainly for getting enum type that you have
 // Please you the TYPECHECKERANDRETURNCORRECTENUM macro as given in the example
 // and input to macro as your class name

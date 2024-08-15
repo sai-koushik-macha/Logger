@@ -114,31 +114,20 @@ class Logger {
         printf("Logger Destructed Properly\n");
     }
 
-    // Once thread processing started you can multiple threads can log to same
-    // file if needed
-    static void StartThreadProcessing(int _core_id) {
-        run = true;
-
-        use_thread = true;
-        core_id = _core_id;
-        thread = std::thread(Logger::Process, nullptr);
-    }
-
-    // This method should be called at the end of the program when all the
-    // logging is done From this point logging won't asynchronous when this
-    // method is called don't log from a different thread the log will be
-    // missed Once this method call is completed multiple threads shouldn't log
-    // to the same file
-    static void StopThreadProcessing() {
-        if (use_thread) {
-            run = false;
-            thread.join();
-            use_thread = false;
+    // Start The Logger
+    // Can do multi threading based logging
+    static void StartLogger(bool start_thread = false,
+                            int _core_id = -1) noexcept {
+        RegisterLogDerivedTypes(mempool);
+        if (start_thread) {
+            StartThreadProcessing(_core_id);
         }
     }
 
+    static void StopLogger() noexcept { StopThreadProcessing(); }
+
 #ifdef LATENCY_FINDING
-    static void PrintLatencies() {
+    static void PrintLatencies() noexcept {
         std::cout << latency_1.get_the_stats() << std::endl;
         std::cout << latency_2.get_the_stats() << std::endl;
         std::cout << latency_3.get_the_stats() << std::endl;
@@ -152,7 +141,7 @@ class Logger {
     // takes string pointer as input and assign the pointer to whatever you
     // want to print
     template <HasPrintMethod T>
-    static T* getObj() {
+    static T* getObj() noexcept {
 #ifdef LATENCY_FINDING
         LatencyProfilingHelper l(latency_1);
 #endif
@@ -177,7 +166,7 @@ class Logger {
     static void Log(Logger* logger, bool log_time_, bool log_location_,
                     bool new_line_, T* data,
                     const std::source_location& location =
-                        std::source_location::current()) {
+                        std::source_location::current()) noexcept {
 #ifdef LATENCY_FINDING
         LatencyProfilingHelper l(latency_2);
 #endif
@@ -198,7 +187,7 @@ class Logger {
     }
 
    private:
-    void LogHelper(DataForLog<Logger>* data_log) {
+    void LogHelper(DataForLog<Logger>* data_log) noexcept {
         std::string s;
         if (data_log->log_time) {
             s += std::format("[{}] ", data_log->time_now);
@@ -217,7 +206,7 @@ class Logger {
         }
         filewrapper.WritetoFile(s);
     }
-    static void* Process(void*) {
+    static void* Process(void*) noexcept {
         int size_of_the_queue = 0;
         do {
 #ifdef LATENCY_FINDING
@@ -250,6 +239,22 @@ class Logger {
 #endif
         } while (run || size_of_the_queue);
         return nullptr;
+    }
+
+    static void StartThreadProcessing(int _core_id) noexcept {
+        run = true;
+
+        use_thread = true;
+        core_id = _core_id;
+        thread = std::thread(Logger::Process, nullptr);
+    }
+
+    static void StopThreadProcessing() noexcept {
+        if (use_thread) {
+            run = false;
+            thread.join();
+            use_thread = false;
+        }
     }
 
     FileWrapper filewrapper;

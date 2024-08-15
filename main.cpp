@@ -22,7 +22,7 @@ int main() {
     std::uniform_int_distribution<> distrib(1, 1000);
     LatencyProfilingStats objget("ObjGet");
     LatencyProfilingStats objlog("ObjLog");
-    Logger::StartThreadProcessing(-1);
+    Logger::StartLogger(true, -1);
     Logger logger("LOGFILE_TESTING");
     std::signal(SIGINT, signal_handler);
     // logger.log<LoggerType1>(true, true, LOGLOCATION, 1024);
@@ -47,7 +47,7 @@ int main() {
 
     while (run_application) {
     }
-    Logger::StopThreadProcessing();
+    Logger::StopLogger();
 
     std::cout << objget.get_the_stats() << std::endl;
     std::cout << objlog.get_the_stats() << std::endl;
