@@ -62,7 +62,8 @@ struct FileWrapper {
             count++;
             createFile();
         }
-        fprintf(file, "%s", data.c_str());
+        static constexpr auto size_of_character = sizeof(char);
+        fwrite(data.c_str(), size_of_character, length_of_string, file);
         size_used += length_of_string;
     }
 
