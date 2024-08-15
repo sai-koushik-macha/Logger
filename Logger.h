@@ -25,6 +25,8 @@
 #include "latency_profile.h"
 #endif
 
+class Logger;
+
 struct FileWrapper {
     explicit FileWrapper(std::string_view filename_) noexcept {
         filename = filename_;
@@ -70,20 +72,19 @@ struct FileWrapper {
     std::fstream file;
 };
 
-template <typename T>
 struct DataForLog {
     const bool log_time;
     const bool log_location;
     const bool new_line;
     std::source_location location;
-    T* logger_pointer;
+    Logger* logger_pointer;
     const EnumLoggerTypes logger_type;
     void* pointer;
     std::chrono::system_clock::time_point time_now;
 
-    DataForLog(T* logger_pointer, EnumLoggerTypes _logger_type, void* _pointer,
-               bool _log_time, bool _log_location, bool _new_line,
-               const std::source_location& location_) noexcept
+    DataForLog(Logger* logger_pointer, EnumLoggerTypes _logger_type,
+               void* _pointer, bool _log_time, bool _log_location,
+               bool _new_line, const std::source_location& location_) noexcept
         : logger_type(_logger_type),
           pointer(_pointer),
           logger_pointer(logger_pointer),
@@ -126,7 +127,7 @@ class Logger {
                                    int _core_id = -1) noexcept {
         RegisterLogDerivedTypes(mempool);
         if (start_thread) {
-            mempool.Register<DataForLog<Logger>>();
+            mempool.Register<DataForLog>();
             StartThreadProcessing(_core_id);
         }
     }
@@ -179,22 +180,22 @@ class Logger {
 #endif
         if (use_thread) {
             sp.lock();
-            auto pointer = mempool.allocate<DataForLog<Logger>>(
+            auto pointer = mempool.allocate<DataForLog>(
                 logger, getType<T>(), data, log_time_, log_location_, new_line_,
                 location);
             log_queue.push_back(pointer);
             logger->message_count++;
             sp.unlock();
         } else {
-            DataForLog<Logger> data_log(logger, getType<T>(), data, log_time_,
-                                        log_location_, new_line_, location);
+            DataForLog data_log(logger, getType<T>(), data, log_time_,
+                                log_location_, new_line_, location);
             logger->LogHelper(&data_log);
             mempool.deallocate(data);
         }
     }
 
    private:
-    inline void LogHelper(DataForLog<Logger>* data_log) noexcept {
+    inline void LogHelper(DataForLog* data_log) noexcept {
         std::string s;
         if (data_log->log_time) {
             s += std::format("[{}] ", data_log->time_now);
@@ -222,7 +223,7 @@ class Logger {
             sp.lock();
             size_of_the_queue = log_queue.size();
             if (size_of_the_queue) {
-                DataForLog<Logger>* data_log = log_queue.front();
+                DataForLog* data_log = log_queue.front();
                 log_queue.pop_front();
                 sp.unlock();
 #ifdef LATENCY_FINDING
@@ -267,7 +268,7 @@ class Logger {
     FileWrapper filewrapper;
     int message_count;
     static volatile bool run;
-    static std::deque<DataForLog<Logger>*> log_queue;
+    static std::deque<DataForLog*> log_queue;
     static SpinLock sp;
     static Mempool mempool;
     static bool use_thread;

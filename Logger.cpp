@@ -1,7 +1,7 @@
 #include "Logger.h"
 
 volatile bool Logger::run = false;
-std::deque<DataForLog<Logger>*> Logger::log_queue = {};
+std::deque<DataForLog*> Logger::log_queue = {};
 SpinLock Logger::sp = {};
 bool Logger::use_thread = false;
 Mempool Logger::mempool = {};
