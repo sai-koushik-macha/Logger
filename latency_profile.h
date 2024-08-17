@@ -17,34 +17,13 @@
 
 class LatencyProfilingStats {
    private:
-    std::timespec startTime, endTime, delta;
+    std::timespec startTime, endTime;
     std::map<unsigned long, unsigned long> latencies;
     std::string identifier;
     bool started_;
 
-    void sub_timespec() {
-        delta.tv_sec = endTime.tv_sec - startTime.tv_sec;
-        delta.tv_nsec = endTime.tv_nsec - startTime.tv_nsec;
-        if (delta.tv_sec >= 0 && delta.tv_nsec < 0) {
-            delta.tv_nsec += NANO_MULTIPLIER;
-            delta.tv_sec--;
-        } else if (delta.tv_sec < 0 && delta.tv_nsec) {
-            delta.tv_nsec -= NANO_MULTIPLIER;
-            delta.tv_sec++;
-        }
-    }
-
-    void add_to_latency() {
-        unsigned long latency = delta.tv_sec * NANO_MULTIPLIER + delta.tv_nsec;
-        if (latencies.find(latency) != latencies.end()) {
-            latencies[latency]++;
-        } else {
-            latencies[latency] = 1;
-        }
-    }
-
    public:
-    std::string get_the_stats() {
+    std::string get_the_stats() noexcept {
         if (latencies.empty()) {
             return "Latency of " + identifier + " Is empty";
         }
@@ -119,7 +98,7 @@ class LatencyProfilingStats {
         ss << "Mode: ";
         for (auto it = mode.begin(); it != mode.end(); it++) {
             ss << *it;
-            if (it != mode.end())
+            if (it != mode.end() - 1)
                 ss << ", ";
             else
                 ss << "\n";
@@ -142,21 +121,23 @@ class LatencyProfilingStats {
         return ss.str();
     }
 
-    LatencyProfilingStats(const std::string& iden) {
+    LatencyProfilingStats(const std::string& iden) noexcept {
         this->identifier = iden;
         started_ = false;
     }
 
-    void start() {
+    inline void start() noexcept {
         started_ = true;
         clock_gettime(CLOCK_REALTIME, &startTime);
     }
 
-    void end() {
+    inline void end() noexcept {
         if (started_) {
             clock_gettime(CLOCK_REALTIME, &endTime);
-            sub_timespec();
-            add_to_latency();
+            unsigned long time_diff =
+                (endTime.tv_sec - startTime.tv_sec) * NANO_MULTIPLIER +
+                (endTime.tv_nsec - startTime.tv_nsec);
+            latencies[time_diff]++;
         }
         started_ = false;
     }
