@@ -17,10 +17,10 @@
 
 class LatencyProfilingStats {
    private:
-    std::timespec startTime, endTime;
+    bool started_{};
+    std::timespec startTime{}, endTime{};
     std::map<unsigned long, unsigned long> latencies;
-    std::string identifier;
-    bool started_;
+    const std::string identifier;
 
    public:
     std::string get_the_stats() noexcept {
@@ -121,19 +121,25 @@ class LatencyProfilingStats {
         return ss.str();
     }
 
-    LatencyProfilingStats(const std::string& iden) noexcept {
-        this->identifier = iden;
-        started_ = false;
-    }
+    explicit LatencyProfilingStats(const std::string iden) noexcept
+        : identifier(std::move(iden)) {}
+
+    LatencyProfilingStats() = delete;
+    LatencyProfilingStats(const LatencyProfilingStats&) = delete;
+    LatencyProfilingStats(const LatencyProfilingStats&&) = delete;
+    LatencyProfilingStats operator=(const LatencyProfilingStats&) = delete;
+    LatencyProfilingStats operator=(const LatencyProfilingStats&&) = delete;
+
+    ~LatencyProfilingStats() = default;
 
     inline void start() noexcept {
-        started_ = true;
         clock_gettime(CLOCK_REALTIME, &startTime);
+        started_ = true;
     }
 
     inline void end() noexcept {
+        clock_gettime(CLOCK_REALTIME, &endTime);
         if (started_) {
-            clock_gettime(CLOCK_REALTIME, &endTime);
             unsigned long time_diff =
                 (endTime.tv_sec - startTime.tv_sec) * NANO_MULTIPLIER +
                 (endTime.tv_nsec - startTime.tv_nsec);
@@ -153,6 +159,12 @@ class LatencyProfilingHelper {
         latency_reference.start();
     }
     ~LatencyProfilingHelper() { latency_reference.end(); }
+
+    LatencyProfilingHelper() = delete;
+    LatencyProfilingHelper(const LatencyProfilingHelper&) = delete;
+    LatencyProfilingHelper(const LatencyProfilingHelper&&) = delete;
+    LatencyProfilingHelper operator=(const LatencyProfilingHelper&) = delete;
+    LatencyProfilingHelper operator=(const LatencyProfilingHelper&&) = delete;
 };
 
 #endif /* LATENCY_PROFILE_H_ */
