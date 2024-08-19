@@ -50,8 +50,8 @@ struct FileWrapper {
     inline void createFile() noexcept {
         closeFile();
         size_used = 0;
-        file = fopen((filename + (count < 0 ? '0' + std::to_string(count)
-                                            : std::to_string(count)))
+        file = fopen((filename + (count < 10 ? '0' + std::to_string(count)
+                                             : std::to_string(count)))
                          .c_str(),
                      "w");
     }
