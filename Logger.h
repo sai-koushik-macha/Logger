@@ -187,13 +187,13 @@ class Logger {
 #ifdef LATENCY_FINDING
         LatencyProfilingHelper l(latency_2);
 #endif
+        logger->message_count++;
         if (use_thread) {
             sp.lock();
             auto pointer = mempool.allocate<DataForLog>(
                 logger, getType<T>(), data, log_time_, log_location_, new_line_,
                 location);
             log_queue.push_back(pointer);
-            logger->message_count++;
             sp.unlock();
         } else {
             DataForLog data_log(logger, getType<T>(), data, log_time_,
@@ -222,6 +222,7 @@ class Logger {
             s += '\n';
         }
         filewrapper.WritetoFile(s);
+        message_count--;
     }
     static void* Process(void*) noexcept {
         int size_of_the_queue = 0;
@@ -245,7 +246,6 @@ class Logger {
                 latency_5.start();
 #endif
                 sp.lock();
-                data_log->logger_pointer->message_count--;
                 DellocateFromMempool(mempool, data_log->logger_type,
                                      data_log->pointer);
                 mempool.deallocate(data_log);
