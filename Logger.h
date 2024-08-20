@@ -116,13 +116,19 @@ concept HasPrintMethod = requires(T t, std::string* s) {
 
 class Logger {
    public:
-    Logger(std::string_view filename_)
+    explicit Logger(std::string_view filename_)
         : filewrapper(filename_), message_count(0) {}
 
-    ~Logger() {
+    ~Logger() noexcept {
         while (message_count != 0);
         printf("Logger Destructed Properly\n");
     }
+
+    Logger() = delete;
+    Logger(const Logger&) = delete;
+    Logger(const Logger&&) = delete;
+    Logger operator=(const Logger&) = delete;
+    Logger operator=(const Logger&&) = delete;
 
     // Start The Logger
     // Can do multi threading based logging
